@@ -10,7 +10,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ComplianceReportService } from './compliance-report.service';
 import { RiskAssessmentService } from './risk-assessment.service';
-import { PdfGeneratorService } from './pdf-generator.service';
+// TODO: Implement PDF generator service
+// import { PdfGeneratorService } from './pdf-generator.service';
 
 @ApiTags('compliance')
 @Controller('api/v1/repositories/:repositoryId/compliance')
@@ -18,7 +19,8 @@ export class ComplianceController {
   constructor(
     private complianceReportService: ComplianceReportService,
     private riskAssessmentService: RiskAssessmentService,
-    private pdfGeneratorService: PdfGeneratorService,
+    // TODO: Add PDF generator service when implemented
+    // private pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Get('report')
@@ -86,25 +88,19 @@ export class ComplianceController {
     @Param('repositoryId') repositoryId: string,
     @Res() res: Response,
   ) {
+    // TODO: Implement PDF generation
     // Generate the compliance report data
     const reportData = await this.complianceReportService.generateReport(
       repositoryId,
       'full',
     );
 
-    // Generate PDF stream
-    const pdfStream = await this.pdfGeneratorService.generateCompliancePdf(
-      reportData as any,
-    );
-
-    // Set headers
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="compliance-report-${repositoryId}.pdf"`,
-    );
-
-    // Pipe the stream to the response
-    pdfStream.pipe(res);
+    // Temporary: Return JSON until PDF generator is implemented
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      message: 'PDF generation not yet implemented',
+      reportData,
+    });
   }
 
   @Get('export/csv')
