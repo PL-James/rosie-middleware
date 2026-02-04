@@ -8,11 +8,12 @@ import {
   specs,
   evidence,
 } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { GitHubApiClient } from '../github/github-api.client';
 import { ArtifactParserService } from '../artifacts/artifact-parser.service';
 import { RepositoriesService } from '../repositories/repositories.service';
 import { TraceabilityValidatorService } from '../traceability/traceability-validator.service';
+import { createPaginatedResponse, PaginatedResponse } from '@/common/pagination.dto';
 
 export interface ScanProgress {
   phase:
@@ -395,13 +396,40 @@ export class ScannerService {
   }
 
   /**
-   * Get all scans for a repository
+   * Get paginated scans for a repository
+   *
+   * @param repositoryId - Repository UUID
+   * @param page - Page number (1-indexed, defaults to 1)
+   * @param limit - Items per page (defaults to 20, max 100)
+   * @returns Paginated scan results with metadata
    */
-  async getRepositoryScans(repositoryId: string) {
-    return db
+  async getRepositoryScans(
+    repositoryId: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<PaginatedResponse<typeof scans.$inferSelect>> {
+    // Validate pagination params
+    const validatedPage = Math.max(1, page);
+    const validatedLimit = Math.min(100, Math.max(1, limit));
+    const offset = (validatedPage - 1) * validatedLimit;
+
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(scans)
+      .where(eq(scans.repositoryId, repositoryId));
+
+    const total = countResult?.count || 0;
+
+    // Get paginated scans (ordered by most recent first)
+    const scanRecords = await db
       .select()
       .from(scans)
       .where(eq(scans.repositoryId, repositoryId))
-      .orderBy(scans.createdAt);
+      .orderBy(desc(scans.createdAt))
+      .limit(validatedLimit)
+      .offset(offset);
+
+    return createPaginatedResponse(scanRecords, total, validatedPage, validatedLimit);
   }
 }

@@ -22,12 +22,12 @@ The rosie-middleware project has been successfully made ROSIE RFC-001 compliant 
 | Artifact Type | Count | Status |
 |--------------|-------|--------|
 | System Context | 1 | ✓ Complete |
-| Requirements | 8 | ✓ Complete |
+| Requirements | 14 | ✓ Complete (8 original + 6 PR #2 fixes) |
 | User Stories | 18 | ✓ Complete |
 | Specifications | 17 | ✓ Complete |
 | Evidence | 0 | ⚠ Pending (no tests exist yet) |
 | Documentation | 1 | ✓ Complete (README.md) |
-| **Total** | **45** | **44 artifacts + 1 README** |
+| **Total** | **51** | **50 artifacts + 1 README** |
 
 ### Directory Structure
 
@@ -85,6 +85,138 @@ rosie-middleware/
     └── evidence/
         └── .gitkeep                    # Placeholder for future JWS test evidence
 ```
+
+---
+
+## PR #2 Critical Fixes - New Requirements
+
+The following requirements were added to address critical CodeRabbit issues in PR #2:
+
+### REQ-DB-001: PostgreSQL Extension Management
+**Risk Rating:** HIGH
+**Description:** Database migrations must ensure all required PostgreSQL extensions are installed before use.
+**Acceptance Criteria:**
+- Migration scripts include `CREATE EXTENSION IF NOT EXISTS` statements
+- pgcrypto extension installed for UUID generation
+- Extension installation is idempotent
+- Fresh PostgreSQL instances can run migrations without manual setup
+
+**Implementation:** `packages/backend/drizzle/0000_milky_stranger.sql:1-3`
+**Tests:** `packages/backend/src/db/migrations.spec.ts`
+
+---
+
+### REQ-SEC-003: CSV Injection Prevention
+**Risk Rating:** HIGH
+**Description:** CSV exports must sanitize user-controlled data to prevent formula injection attacks.
+**Acceptance Criteria:**
+- All formula-triggering characters (`=`, `+`, `-`, `@`, `\t`, `\r`) are neutralized
+- RFC 4180 escaping for double quotes
+- Cells containing commas/newlines wrapped in quotes
+- Malicious payloads rendered as text (not executed)
+
+**Implementation:**
+- `packages/backend/src/common/utils/csv-sanitizer.ts`
+- `packages/backend/src/modules/compliance/compliance-report.service.ts:15,398`
+
+**Tests:**
+- `packages/backend/src/common/utils/csv-sanitizer.spec.ts` (100% branch coverage)
+- `packages/backend/src/modules/compliance/compliance-report.integration.spec.ts`
+
+**Reference:** [OWASP CSV Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/CSV_Injection_Prevention_Cheat_Sheet.html)
+
+---
+
+### REQ-EV-002: Batch Verification Resilience
+**Risk Rating:** HIGH
+**Description:** Batch evidence verification must handle individual failures gracefully without cascading.
+**Acceptance Criteria:**
+- Use `Promise.allSettled()` instead of `Promise.all()`
+- Individual verification failures are logged
+- Failed verifications return error results (not thrown exceptions)
+- All verifications complete regardless of individual failures
+- Batch summary reports success/failure counts
+
+**Implementation:** `packages/backend/src/modules/evidence/evidence.service.ts:86-106`
+**Tests:** `packages/backend/src/modules/evidence/evidence.service.spec.ts`
+
+---
+
+### REQ-GH-001: GitHub API Encoding Validation
+**Risk Rating:** HIGH
+**Description:** GitHub API client must handle all encoding types returned by GitHub API.
+**Acceptance Criteria:**
+- Support base64 encoding (standard files < 1MB)
+- Support utf-8/utf8 encoding (plain text)
+- Support encoding="none" (large files > 1MB via Git Blob API)
+- Reject unsupported encodings with descriptive errors
+- Preserve Unicode characters during decoding
+
+**Implementation:**
+- `packages/backend/src/modules/github/github-api.client.ts:158-271`
+- New method: `getFileContentViaBlob()` for large files
+
+**Tests:** `packages/backend/src/modules/github/github-api.client.spec.ts`
+
+---
+
+### REQ-RA-003: Traceability Chain Validation
+**Risk Rating:** HIGH
+**Description:** Risk assessment must validate proper ROSIE traceability chain (REQ → User Story → Spec).
+**Acceptance Criteria:**
+- Requirements coverage traverses full chain (not direct REQ → Spec)
+- A requirement is covered only if: has user story AND user story has spec
+- Traceability integrity validates all chain links
+- Broken links are detected and logged
+- Missing parent IDs are flagged as errors
+
+**Implementation:** `packages/backend/src/modules/compliance/risk-assessment.service.ts:150-248`
+**Tests:** `packages/backend/src/modules/compliance/risk-assessment.service.spec.ts`
+
+**Traceability Chain:**
+```
+REQ-001 → US-001 → SPEC-001 → EV-001  ✓ Valid
+REQ-002 → SPEC-002                     ✗ Invalid (missing user story)
+REQ-003 → US-003                       ✗ Incomplete (user story has no spec)
+```
+
+---
+
+### REQ-SCAN-004: Scan History Pagination
+**Risk Rating:** MEDIUM
+**Description:** Scan history retrieval must support pagination to prevent performance degradation with large datasets.
+**Acceptance Criteria:**
+- Backend implements limit/offset pagination
+- Default page size: 20 scans
+- Maximum page size: 100 scans
+- Query parameter validation (page ≥ 1, limit ≤ 100)
+- Pagination metadata includes: page, limit, total, totalPages, hasNext, hasPrevious
+- Frontend displays pagination controls
+
+**Implementation:**
+- Backend: `packages/backend/src/modules/scanner/scanner.service.ts:400-430`
+- Frontend: `packages/frontend/src/pages/RepositoryDetail.tsx:84-95,335-395`
+- API Client: `packages/frontend/src/lib/api.ts:237-251`
+
+**Tests:**
+- `packages/backend/src/modules/scanner/scanner.service.spec.ts`
+- `packages/backend/src/modules/scanner/scanner.integration.spec.ts`
+
+---
+
+### REQ-UI-003: Frontend Pagination Controls
+**Risk Rating:** LOW
+**Description:** Frontend must provide intuitive pagination UI for navigating large scan histories.
+**Acceptance Criteria:**
+- Display "Showing X to Y of Z" indicator
+- Previous/Next buttons with disabled state
+- Page number buttons with current page highlight
+- Ellipsis for large page ranges
+- Empty state message when no scans found
+- Pagination controls hidden when ≤ 1 page
+
+**Implementation:** `packages/frontend/src/pages/RepositoryDetail.tsx:335-395`
+**Tests:** Frontend component tests (via Vitest + React Testing Library)
 
 ---
 

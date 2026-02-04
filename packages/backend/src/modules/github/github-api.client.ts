@@ -154,6 +154,11 @@ export class GitHubApiClient {
 
   /**
    * Get file content from repository
+   *
+   * Handles multiple encoding types returned by GitHub API:
+   * - base64: Standard encoding for most files
+   * - utf-8/utf8: Plain text encoding
+   * - none: Large files (>1MB) require Git Blob API
    */
   async getFileContent(
     owner: string,
@@ -173,7 +178,33 @@ export class GitHubApiClient {
         throw new Error(`Path ${path} is not a file`);
       }
 
-      const content = Buffer.from(data.content, 'base64').toString('utf-8');
+      // Validate and handle encoding type
+      const encoding = data.encoding;
+      let content: string;
+
+      switch (encoding) {
+        case 'base64':
+          content = Buffer.from(data.content, 'base64').toString('utf-8');
+          break;
+
+        case 'utf-8':
+        case 'utf8':
+          content = data.content;
+          break;
+
+        case 'none':
+          // File is too large (>1MB), fetch via Git Blob API
+          this.logger.warn(
+            `File ${path} is >1MB, fetching via Git Blob API (sha: ${data.sha})`,
+          );
+          content = await this.getFileContentViaBlob(owner, repo, data.sha);
+          break;
+
+        default:
+          throw new Error(
+            `Unsupported encoding '${encoding}' for file ${path}. Expected: base64, utf-8, or none.`,
+          );
+      }
 
       return {
         path: data.path,
@@ -183,6 +214,40 @@ export class GitHubApiClient {
     } catch (error) {
       this.logger.error(
         `Failed to get file content for ${owner}/${repo}/${path}:`,
+        error.message,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get file content via Git Blob API (for large files >1MB)
+   *
+   * GitHub API returns encoding="none" for files larger than 1MB.
+   * Use the Git Blob API to fetch the raw content.
+   */
+  private async getFileContentViaBlob(
+    owner: string,
+    repo: string,
+    sha: string,
+  ): Promise<string> {
+    try {
+      const { data } = await this.octokit.git.getBlob({
+        owner,
+        repo,
+        file_sha: sha,
+      });
+
+      // Git Blob API returns base64-encoded content
+      if (data.encoding === 'base64') {
+        return Buffer.from(data.content, 'base64').toString('utf-8');
+      }
+
+      // Fallback for other encodings
+      return data.content;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get blob content for ${owner}/${repo}@${sha}:`,
         error.message,
       );
       throw error;

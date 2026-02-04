@@ -12,6 +12,7 @@ import {
 import { eq, desc } from 'drizzle-orm';
 import { RiskAssessmentService } from './risk-assessment.service';
 import { EvidenceService } from '../evidence/evidence.service';
+import { sanitizeCsv } from '@/common/utils/csv-sanitizer';
 
 export interface ComplianceReport {
   id: string;
@@ -360,6 +361,9 @@ export class ComplianceReportService {
 
   /**
    * Export audit trail to CSV
+   *
+   * Uses sanitizeCsv() to prevent CSV injection attacks.
+   * All user-controlled fields are sanitized to prevent formula execution.
    */
   async exportAuditTrailToCsv(repositoryId: string): Promise<string> {
     this.logger.log(`Exporting audit trail for repository ${repositoryId} to CSV`);
@@ -370,7 +374,7 @@ export class ComplianceReportService {
       .where(eq(auditLog.resourceId, repositoryId))
       .orderBy(desc(auditLog.timestamp));
 
-    // Build CSV
+    // Build CSV with sanitization
     const headers = [
       'Timestamp',
       'Action',
@@ -395,7 +399,8 @@ export class ComplianceReportService {
       record.responseStatus?.toString() || '',
     ]);
 
-    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    // Use sanitizeCsv to prevent CSV injection
+    const csv = sanitizeCsv(headers, rows);
 
     return csv;
   }

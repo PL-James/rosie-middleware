@@ -1,3 +1,7 @@
+-- Enable pgcrypto extension for gen_random_uuid()
+-- Required for UUID generation in default values across all tables
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+--> statement-breakpoint
 CREATE TYPE "public"."artifact_type" AS ENUM('requirement', 'user_story', 'spec', 'evidence');--> statement-breakpoint
 CREATE TYPE "public"."risk_rating" AS ENUM('HIGH', 'MEDIUM', 'LOW');--> statement-breakpoint
 CREATE TYPE "public"."scan_status" AS ENUM('pending', 'in_progress', 'completed', 'failed');--> statement-breakpoint

@@ -24,6 +24,8 @@ export default function RepositoryDetail() {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'requirements' | 'user-stories' | 'specs' | 'evidence'
   >('overview');
+  const [scansPage, setScansPage] = useState(1);
+  const [scansLimit] = useState(10);
 
   const queryClient = useQueryClient();
 
@@ -81,14 +83,17 @@ export default function RepositoryDetail() {
     enabled: !!id && repository?.isRosieCompliant,
   });
 
-  const { data: scans } = useQuery({
-    queryKey: ['scans', id],
+  const { data: scansResponse } = useQuery({
+    queryKey: ['scans', id, scansPage, scansLimit],
     queryFn: async () => {
-      const response = await scansApi.getRepositoryScans(id!);
+      const response = await scansApi.getRepositoryScans(id!, scansPage, scansLimit);
       return response.data;
     },
     enabled: !!id,
   });
+
+  const scans = scansResponse?.data || [];
+  const scansPagination = scansResponse?.pagination;
 
   const scanMutation = useMutation({
     mutationFn: () => repositoriesApi.triggerScan(id!),
@@ -326,13 +331,22 @@ export default function RepositoryDetail() {
             </div>
 
             <div className="p-6">
-              {activeTab === 'overview' && scans && (
+              {activeTab === 'overview' && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Scan History
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Scan History
+                    </h3>
+                    {scansPagination && scansPagination.total > 0 && (
+                      <p className="text-sm text-gray-600">
+                        Showing {(scansPage - 1) * scansLimit + 1} to{' '}
+                        {Math.min(scansPage * scansLimit, scansPagination.total)} of{' '}
+                        {scansPagination.total}
+                      </p>
+                    )}
+                  </div>
                   <div className="space-y-3">
-                    {scans.slice(0, 10).map((scan) => (
+                    {scans.length > 0 ? scans.map((scan) => (
                       <div
                         key={scan.id}
                         className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
@@ -369,8 +383,86 @@ export default function RepositoryDetail() {
                           )}
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-gray-500">
+                        No scans found
+                      </div>
+                    )}
                   </div>
+
+                  {/* Pagination Controls */}
+                  {scansPagination && scansPagination.totalPages > 1 && (
+                    <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                      <button
+                        onClick={() => setScansPage((p) => Math.max(1, p - 1))}
+                        disabled={!scansPagination.hasPrevious}
+                        className={cn(
+                          'px-4 py-2 text-sm font-medium rounded-md',
+                          scansPagination.hasPrevious
+                            ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed',
+                        )}
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        {Array.from(
+                          { length: scansPagination.totalPages },
+                          (_, i) => i + 1,
+                        )
+                          .filter((pageNum) => {
+                            // Show first page, last page, current page, and adjacent pages
+                            return (
+                              pageNum === 1 ||
+                              pageNum === scansPagination.totalPages ||
+                              Math.abs(pageNum - scansPage) <= 1
+                            );
+                          })
+                          .map((pageNum, idx, arr) => {
+                            // Add ellipsis for gaps
+                            const prevPageNum = arr[idx - 1];
+                            const showEllipsis = prevPageNum && pageNum - prevPageNum > 1;
+
+                            return (
+                              <div key={pageNum} className="flex items-center gap-2">
+                                {showEllipsis && (
+                                  <span className="text-gray-400">...</span>
+                                )}
+                                <button
+                                  onClick={() => setScansPage(pageNum)}
+                                  className={cn(
+                                    'px-3 py-1 text-sm font-medium rounded-md',
+                                    pageNum === scansPage
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+                                  )}
+                                >
+                                  {pageNum}
+                                </button>
+                              </div>
+                            );
+                          })}
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          setScansPage((p) =>
+                            Math.min(scansPagination.totalPages, p + 1),
+                          )
+                        }
+                        disabled={!scansPagination.hasNext}
+                        className={cn(
+                          'px-4 py-2 text-sm font-medium rounded-md',
+                          scansPagination.hasNext
+                            ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed',
+                        )}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

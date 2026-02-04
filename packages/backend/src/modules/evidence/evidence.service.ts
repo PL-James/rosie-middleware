@@ -82,15 +82,39 @@ export class EvidenceService {
 
   /**
    * Batch verify multiple evidence artifacts
+   *
+   * Uses Promise.allSettled() to ensure all verifications complete even if some fail.
+   * This prevents cascading failures where one invalid artifact blocks all others.
    */
   async batchVerifyEvidence(repositoryId: string, evidenceIds: string[]) {
     this.logger.log(
       `Batch verifying ${evidenceIds.length} evidence artifacts for repository ${repositoryId}`,
     );
 
-    const results = await Promise.all(
+    // Use Promise.allSettled() instead of Promise.all() for graceful failure handling
+    const settledResults = await Promise.allSettled(
       evidenceIds.map((id) => this.verifyEvidence(repositoryId, id)),
     );
+
+    // Transform settled results into verification results
+    const results = settledResults.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        // Log verification failure
+        this.logger.error(
+          `Evidence verification failed for ${evidenceIds[index]}: ${result.reason?.message}`,
+        );
+
+        // Return error result instead of throwing
+        return {
+          evidenceId: evidenceIds[index],
+          isValid: false,
+          verifiedAt: new Date(),
+          error: result.reason?.message || 'Verification failed',
+        };
+      }
+    });
 
     const successCount = results.filter((r) => r.isValid).length;
     this.logger.log(

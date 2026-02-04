@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { db, requirements, specs, evidence } from '@/db';
+import { db, requirements, userStories, specs, evidence } from '@/db';
 import { eq } from 'drizzle-orm';
 
 export interface RiskFactor {
@@ -41,6 +41,12 @@ export class RiskAssessmentService {
       .from(requirements)
       .where(eq(requirements.repositoryId, repositoryId));
 
+    // Get all user stories (needed for proper traceability chain)
+    const userStoriesList = await db
+      .select()
+      .from(userStories)
+      .where(eq(userStories.repositoryId, repositoryId));
+
     // Get all specs
     const specsList = await db
       .select()
@@ -59,13 +65,14 @@ export class RiskAssessmentService {
     // Factor 1: Requirements Coverage (30% weight)
     const requirementsCoverage = this.calculateRequirementsCoverage(
       requirementsList,
+      userStoriesList,
       specsList,
     );
     factors.push({
       factor: 'Requirements Coverage',
       weight: 0.3,
       score: requirementsCoverage,
-      rationale: `${requirementsList.length} requirements traced to ${specsList.length} specifications`,
+      rationale: `${requirementsList.length} requirements traced through ${userStoriesList.length} user stories to ${specsList.length} specifications`,
     });
 
     // Factor 2: Evidence Quality (30% weight)
@@ -92,13 +99,14 @@ export class RiskAssessmentService {
     // Factor 4: Traceability Integrity (15% weight)
     const traceabilityIntegrity = this.calculateTraceabilityIntegrity(
       requirementsList,
+      userStoriesList,
       specsList,
     );
     factors.push({
       factor: 'Traceability Integrity',
       weight: 0.15,
       score: traceabilityIntegrity,
-      rationale: 'Parent-child relationships validated',
+      rationale: 'REQ → User Story → Spec traceability chain validated',
     });
 
     // Calculate weighted risk score
@@ -146,21 +154,41 @@ export class RiskAssessmentService {
 
   /**
    * Calculate requirements coverage score (0-100)
+   *
+   * Traverses proper ROSIE traceability chain: REQ → User Story → Spec
+   * A requirement is considered covered if it has at least one user story,
+   * and that user story has at least one spec.
    */
   private calculateRequirementsCoverage(
     requirementsList: any[],
+    userStoriesList: any[],
     specsList: any[],
   ): number {
     if (requirementsList.length === 0) return 0;
 
-    // Count how many requirements have at least one spec
-    const requirementsWithSpecs = new Set(
-      specsList.map((s) => s.parentId).filter(Boolean),
-    );
+    let coveredCount = 0;
 
-    const coveredCount = requirementsList.filter((r) =>
-      requirementsWithSpecs.has(r.gxpId),
-    ).length;
+    for (const req of requirementsList) {
+      // Step 1: Find user stories for this requirement
+      const userStoriesForReq = userStoriesList.filter(
+        (us) => us.parentId === req.gxpId,
+      );
+
+      if (userStoriesForReq.length === 0) {
+        // No user stories for this requirement → not covered
+        continue;
+      }
+
+      // Step 2: Find specs for those user stories
+      const specsForReq = specsList.filter((spec) =>
+        userStoriesForReq.some((us) => us.gxpId === spec.parentId),
+      );
+
+      if (specsForReq.length > 0) {
+        // Requirement has full chain: REQ → US → Spec
+        coveredCount++;
+      }
+    }
 
     return (coveredCount / requirementsList.length) * 100;
   }
@@ -204,20 +232,67 @@ export class RiskAssessmentService {
 
   /**
    * Calculate traceability integrity score (0-100)
+   *
+   * Validates the full ROSIE traceability chain: REQ → User Story → Spec
+   *
+   * Integrity checks:
+   * 1. All user stories must reference valid requirement GxP IDs
+   * 2. All specs must reference valid user story GxP IDs
+   * 3. All specs must have a complete chain back to a requirement
    */
   private calculateTraceabilityIntegrity(
     requirementsList: any[],
+    userStoriesList: any[],
     specsList: any[],
   ): number {
-    if (specsList.length === 0) return 100;
+    // If no artifacts, consider integrity perfect (nothing to break)
+    if (userStoriesList.length === 0 && specsList.length === 0) return 100;
 
-    // Check if all specs have valid parent references
-    const validRequirementIds = new Set(requirementsList.map((r) => r.gxpId));
-    const specsWithValidParents = specsList.filter(
-      (s) => !s.parentId || validRequirementIds.has(s.parentId),
-    ).length;
+    let brokenLinks = 0;
+    let totalLinks = 0;
 
-    return (specsWithValidParents / specsList.length) * 100;
+    // Valid GxP ID sets for quick lookup
+    const validReqIds = new Set(requirementsList.map((r) => r.gxpId));
+    const validUserStoryIds = new Set(userStoriesList.map((us) => us.gxpId));
+
+    // Check 1: Validate user story → requirement links
+    for (const us of userStoriesList) {
+      totalLinks++;
+      if (us.parentId && !validReqIds.has(us.parentId)) {
+        brokenLinks++;
+        this.logger.warn(
+          `Broken link: User Story ${us.gxpId} references non-existent requirement ${us.parentId}`,
+        );
+      } else if (!us.parentId) {
+        brokenLinks++;
+        this.logger.warn(
+          `Broken link: User Story ${us.gxpId} has no parent requirement`,
+        );
+      }
+    }
+
+    // Check 2: Validate spec → user story links
+    for (const spec of specsList) {
+      totalLinks++;
+      if (spec.parentId && !validUserStoryIds.has(spec.parentId)) {
+        brokenLinks++;
+        this.logger.warn(
+          `Broken link: Spec ${spec.gxpId} references non-existent user story ${spec.parentId}`,
+        );
+      } else if (!spec.parentId) {
+        brokenLinks++;
+        this.logger.warn(
+          `Broken link: Spec ${spec.gxpId} has no parent user story`,
+        );
+      }
+    }
+
+    // If no links to validate, return 100%
+    if (totalLinks === 0) return 100;
+
+    // Return percentage of valid links
+    const validLinks = totalLinks - brokenLinks;
+    return (validLinks / totalLinks) * 100;
   }
 
   /**

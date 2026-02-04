@@ -234,10 +234,24 @@ export const repositoriesApi = {
     api.post<{ scanId: string; message: string }>(`/repositories/${id}/scan`),
 };
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+}
+
 export const scansApi = {
   getStatus: (scanId: string) => api.get<Scan>(`/scans/${scanId}`),
-  getRepositoryScans: (repositoryId: string) =>
-    api.get<Scan[]>(`/repositories/${repositoryId}/scans`),
+  getRepositoryScans: (repositoryId: string, page: number = 1, limit: number = 20) =>
+    api.get<PaginatedResponse<Scan>>(`/repositories/${repositoryId}/scans`, {
+      params: { page, limit },
+    }),
 };
 
 export const artifactsApi = {
