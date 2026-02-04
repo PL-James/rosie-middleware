@@ -216,7 +216,7 @@ export class ArtifactParserService {
   /**
    * Parse JWS evidence file
    */
-  parseEvidence(content: string, fileName: string): ParsedEvidence {
+  parseEvidence(content: string, _fileName: string): ParsedEvidence {
     try {
       // JWS format: header.payload.signature
       const parts = content.trim().split('.');
