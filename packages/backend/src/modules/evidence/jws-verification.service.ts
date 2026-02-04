@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as jose from 'node-jose';
 import {
   getJwsPublicKeys,
@@ -13,14 +13,18 @@ export interface JwsVerificationResult {
 }
 
 @Injectable()
-export class JwsVerificationService {
+export class JwsVerificationService implements OnModuleInit {
   private readonly logger = new Logger(JwsVerificationService.name);
   private keystore: any;
   private config = getJwsVerificationConfig();
 
-  constructor() {
-    // Initialize keystore with configured keys
-    this.initializeKeystore();
+  constructor() {}
+
+  /**
+   * Initialize module - set up keystore
+   */
+  async onModuleInit() {
+    await this.initializeKeystore();
   }
 
   /**

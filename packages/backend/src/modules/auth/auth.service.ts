@@ -1,6 +1,6 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export interface User {
   id: string;
@@ -18,16 +18,20 @@ export interface JwtPayload {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
 
   // In-memory user store for development
   // In production, replace with database queries
   private users: Map<string, { password: string; user: User }> = new Map();
 
-  constructor(private jwtService: JwtService) {
-    // Initialize with default admin user for development
-    this.initializeDefaultUsers();
+  constructor(private jwtService: JwtService) {}
+
+  /**
+   * Initialize module - set up default users
+   */
+  async onModuleInit() {
+    await this.initializeDefaultUsers();
   }
 
   /**
@@ -46,7 +50,7 @@ export class AuthService {
         },
       });
 
-      this.logger.log('Default admin user initialized (admin@example.com / admin123)');
+      this.logger.log('Default admin user initialized (email: admin@example.com)');
     }
   }
 
@@ -113,7 +117,7 @@ export class AuthService {
    */
   async register(email: string, password: string, name: string): Promise<User> {
     if (this.users.has(email)) {
-      throw new Error('User already exists');
+      throw new ConflictException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

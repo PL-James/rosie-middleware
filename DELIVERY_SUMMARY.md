@@ -297,16 +297,26 @@ product_repositories (7 columns, 3 indexes)
 ## Critical Issues to Fix Before Production
 
 ### HIGH Priority 🚨
-1. **Authentication:** No user authentication implemented
-2. **JWS Keystore:** Empty keystore (accepts unsigned JWS in dev mode)
-3. **Migration Conflicts:** Duplicate migration files need consolidation
-4. **Chart Library:** Missing `recharts` dependency for RiskDashboard
+1. **Authentication Hardening:** Auth module implemented but requires production configuration
+   - Set `AUTH_REQUIRED=true` in production environment
+   - Change `JWT_SECRET` to a strong random value (32+ characters)
+   - Replace in-memory user store with database-backed authentication
+   - Review and test JWT token expiration and refresh logic
+
+2. **JWS Keystore Configuration:** JWS verification service implemented but requires production keys
+   - Populate keystore with real signing keys (do not use development/unsigned keys in production)
+   - Configure `JWS_PUBLIC_KEYS` environment variable with actual public keys
+   - Remove `allowUnsignedInDev` fallback behavior for production deployments
+   - Implement key rotation strategy for long-term security
+
+3. **Database Migration:** Migration files consolidated, verify on fresh database
+   - Test migrations on clean PostgreSQL instance to ensure pgcrypto extension installs correctly
+   - Validate all foreign key relationships work as expected
 
 ### MEDIUM Priority ⚠️
 1. **Test Coverage:** Write unit and E2E tests
-2. **PDF Export:** Implement full PDF generation (currently placeholder)
-3. **Pagination:** Add pagination for large tables
-4. **Caching:** Add Redis caching layer
+2. **Pagination:** Verify pagination performance with large datasets
+3. **Caching:** Add Redis caching layer for high-traffic endpoints
 
 ### LOW Priority ℹ️
 1. **OpenAPI Docs:** Auto-generate API documentation

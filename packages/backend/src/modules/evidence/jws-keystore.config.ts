@@ -96,11 +96,22 @@ export interface JwsVerificationConfig {
 }
 
 export function getJwsVerificationConfig(): JwsVerificationConfig {
+  let maxAgeSeconds: number | null = null;
+
+  if (process.env.JWS_MAX_AGE_SECONDS) {
+    const parsed = parseInt(process.env.JWS_MAX_AGE_SECONDS, 10);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      maxAgeSeconds = parsed;
+    } else {
+      console.warn(
+        `Invalid JWS_MAX_AGE_SECONDS value: ${process.env.JWS_MAX_AGE_SECONDS}. Must be a non-negative number. Falling back to null.`
+      );
+    }
+  }
+
   return {
     allowUnsignedInDev: process.env.NODE_ENV !== 'production',
     logFailures: process.env.JWS_LOG_FAILURES !== 'false',
-    maxAgeSeconds: process.env.JWS_MAX_AGE_SECONDS
-      ? parseInt(process.env.JWS_MAX_AGE_SECONDS, 10)
-      : null,
+    maxAgeSeconds,
   };
 }
