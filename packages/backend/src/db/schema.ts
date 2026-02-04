@@ -350,6 +350,33 @@ export const auditLog = pgTable(
   }),
 );
 
+// Compliance Reports
+export const complianceReports = pgTable(
+  'compliance_reports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    repositoryId: uuid('repository_id')
+      .notNull()
+      .references(() => repositories.id, { onDelete: 'cascade' }),
+    reportType: varchar('report_type', { length: 50 }).notNull(),
+    generatedAt: timestamp('generated_at').defaultNow().notNull(),
+    generatedBy: varchar('generated_by', { length: 255 }),
+    reportData: jsonb('report_data').notNull(),
+    complianceScore: integer('compliance_score'),
+    overallRisk: varchar('overall_risk', { length: 10 }),
+    pdfUrl: text('pdf_url'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    repositoryIdIdx: index('compliance_report_repository_id_idx').on(
+      table.repositoryId,
+    ),
+    generatedAtIdx: index('compliance_report_generated_at_idx').on(
+      table.generatedAt,
+    ),
+  }),
+);
+
 // Relations
 export const repositoriesRelations = relations(repositories, ({ many }) => ({
   scans: many(scans),
@@ -432,33 +459,6 @@ export const evidenceRelations = relations(evidence, ({ one }) => ({
     references: [specs.id],
   }),
 }));
-
-// Compliance Reports
-export const complianceReports = pgTable(
-  'compliance_reports',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    repositoryId: uuid('repository_id')
-      .notNull()
-      .references(() => repositories.id, { onDelete: 'cascade' }),
-    reportType: varchar('report_type', { length: 50 }).notNull(),
-    generatedAt: timestamp('generated_at').defaultNow().notNull(),
-    generatedBy: varchar('generated_by', { length: 255 }),
-    reportData: jsonb('report_data').notNull(),
-    complianceScore: integer('compliance_score'),
-    overallRisk: varchar('overall_risk', { length: 10 }),
-    pdfUrl: text('pdf_url'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    repositoryIdIdx: index('compliance_report_repository_id_idx').on(
-      table.repositoryId,
-    ),
-    generatedAtIdx: index('compliance_report_generated_at_idx').on(
-      table.generatedAt,
-    ),
-  }),
-);
 
 export const complianceReportsRelations = relations(
   complianceReports,

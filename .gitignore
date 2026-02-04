@@ -45,3 +45,8 @@ yarn-error.log*
 .cache/
 .turbo/
 .next/
+
+# Git worktrees
+rosie-middleware-frontend/
+rosie-middleware-phase3/
+rosie-middleware-phase4/
