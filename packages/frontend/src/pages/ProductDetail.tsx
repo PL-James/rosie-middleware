@@ -32,6 +32,7 @@ export default function ProductDetail() {
   useEffect(() => {
     if (!productId) return;
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const fetchData = async () => {

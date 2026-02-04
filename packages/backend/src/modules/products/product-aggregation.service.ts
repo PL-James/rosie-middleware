@@ -201,8 +201,6 @@ export class ProductAggregationService {
       .from(repositories)
       .where(inArray(repositories.id, repoIds));
 
-    const _repoMap = new Map(repos.map((r) => [r.id, r]));
-
     // Count artifacts by type
     const reqs = await db
       .select()
@@ -371,8 +369,6 @@ export class ProductAggregationService {
       .select()
       .from(repositories)
       .where(inArray(repositories.id, repoIds));
-
-    const repoMap = new Map(repos.map((r) => [r.id, r.name]));
 
     // Get all requirements with risk ratings
     const reqs = await db
