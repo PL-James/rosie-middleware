@@ -157,7 +157,7 @@ export class ArtifactsController {
     @Query('parent_id') parentId?: string,
     @Query('tier') tier?: string,
   ) {
-    let conditions = [eq(specs.repositoryId, repositoryId)];
+    const conditions = [eq(specs.repositoryId, repositoryId)];
 
     if (parentId) {
       conditions.push(eq(specs.parentId, parentId));

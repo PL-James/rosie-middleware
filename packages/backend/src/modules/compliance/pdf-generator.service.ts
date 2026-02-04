@@ -147,7 +147,7 @@ export class PdfGeneratorService {
     doc.moveDown(2);
   }
 
-  private addAuditTrail(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
+  private addAuditTrail(doc: PDFKit.PDFDocument, _data: ComplianceReportData) {
     doc.fontSize(16).text('Audit Trail Summary', { underline: true });
     doc.moveDown();
 

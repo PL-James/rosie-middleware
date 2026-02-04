@@ -25,7 +25,7 @@ export class RepositoriesService {
     // Verify repository exists on GitHub
     try {
       await this.githubClient.getRepository(owner, repo);
-    } catch (error) {
+    } catch (_error) {
       throw new BadRequestException(
         `Repository not found or inaccessible: ${owner}/${repo}`,
       );

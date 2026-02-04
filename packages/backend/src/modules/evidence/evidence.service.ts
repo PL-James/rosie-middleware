@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { db, evidence, specs } from '@/db';
+import { db, evidence } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { JwsVerificationService } from './jws-verification.service';
 
@@ -56,7 +56,7 @@ export class EvidenceService {
     );
 
     // Update evidence record with verification result
-    const [updatedEvidence] = await db
+    const [_updatedEvidence] = await db
       .update(evidence)
       .set({
         isSignatureValid: verificationResult.isValid,
@@ -152,7 +152,7 @@ export class EvidenceService {
    * Get verified evidence for a repository (optionally filtered by tier)
    */
   async getVerifiedEvidence(repositoryId: string, tier?: 'IQ' | 'OQ' | 'PQ') {
-    let query = db
+    const query = db
       .select()
       .from(evidence)
       .where(

@@ -26,7 +26,7 @@ export class JwsVerificationService {
     try {
       this.keystore = jose.JWK.createKeyStore();
       this.logger.log('JWS keystore initialized');
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to initialize keystore:', error);
     }
   }
@@ -60,7 +60,7 @@ export class JwsVerificationService {
         payload,
         header: result.header,
       };
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn(`JWS verification failed: ${error.message}`);
 
       // For now, we'll accept unsigned JWS for testing
@@ -139,7 +139,7 @@ export class JwsVerificationService {
       Buffer.from(parts[0], 'base64url');
       Buffer.from(parts[1], 'base64url');
       Buffer.from(parts[2], 'base64url');
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS parts must be valid base64url encoded strings',
@@ -155,7 +155,7 @@ export class JwsVerificationService {
           error: 'JWS header must include "alg" field',
         };
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS header must be valid JSON',
@@ -165,7 +165,7 @@ export class JwsVerificationService {
     // Validate payload structure
     try {
       JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS payload must be valid JSON',
@@ -182,7 +182,7 @@ export class JwsVerificationService {
     try {
       await this.keystore.add(jwkKey);
       this.logger.log('Public key added to keystore');
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to add public key:', error);
       throw error;
     }
