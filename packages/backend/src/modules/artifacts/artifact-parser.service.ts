@@ -135,7 +135,7 @@ export class ArtifactParserService {
       data.gxp_id ||
       data.id ||
       filePath.match(/REQ-\d+/)?.[0] ||
-      filePath.match(/([^\/]+)\.md$/)?.[1];
+      filePath.match(/([^/]+)\.md$/)?.[1];
 
     return {
       gxpId,
@@ -160,7 +160,7 @@ export class ArtifactParserService {
       data.gxp_id ||
       data.id ||
       filePath.match(/US-\d+/)?.[0] ||
-      filePath.match(/([^\/]+)\.md$/)?.[1];
+      filePath.match(/([^/]+)\.md$/)?.[1];
 
     const parentId = data.parent_id || data.requirement || data.parentId;
 
@@ -191,7 +191,7 @@ export class ArtifactParserService {
       data.gxp_id ||
       data.id ||
       filePath.match(/SPEC-\d+-\d+/)?.[0] ||
-      filePath.match(/([^\/]+)\.md$/)?.[1];
+      filePath.match(/([^/]+)\.md$/)?.[1];
 
     const parentId = data.parent_id || data.user_story || data.parentId;
 
