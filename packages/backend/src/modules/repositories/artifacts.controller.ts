@@ -7,7 +7,8 @@ import {
   specs,
   evidence,
 } from '@/db';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
+import { PaginationDto, createPaginatedResponse } from '@/common/pagination.dto';
 
 @Controller('api/v1/repositories/:id')
 export class ArtifactsController {
@@ -31,11 +32,12 @@ export class ArtifactsController {
   }
 
   /**
-   * Get all requirements
+   * Get all requirements (with pagination)
    */
   @Get('requirements')
   async getRequirements(
     @Param('id') repositoryId: string,
+    @Query() pagination: PaginationDto,
     @Query('risk_rating') riskRating?: string,
   ) {
     const conditions = [eq(requirements.repositoryId, repositoryId)];
@@ -44,11 +46,22 @@ export class ArtifactsController {
       conditions.push(eq(requirements.gxpRiskRating, riskRating as any));
     }
 
-    return db
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(requirements)
+      .where(and(...conditions));
+
+    // Get paginated data
+    const data = await db
       .select()
       .from(requirements)
       .where(and(...conditions))
-      .orderBy(requirements.gxpId);
+      .orderBy(requirements.gxpId)
+      .limit(pagination.limit)
+      .offset(pagination.skip);
+
+    return createPaginatedResponse(data, total, pagination.page, pagination.limit);
   }
 
   /**
@@ -77,11 +90,12 @@ export class ArtifactsController {
   }
 
   /**
-   * Get all user stories
+   * Get all user stories (with pagination)
    */
   @Get('user-stories')
   async getUserStories(
     @Param('id') repositoryId: string,
+    @Query() pagination: PaginationDto,
     @Query('parent_id') parentId?: string,
   ) {
     const conditions = [eq(userStories.repositoryId, repositoryId)];
@@ -90,11 +104,22 @@ export class ArtifactsController {
       conditions.push(eq(userStories.parentId, parentId));
     }
 
-    return db
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(userStories)
+      .where(and(...conditions));
+
+    // Get paginated data
+    const data = await db
       .select()
       .from(userStories)
       .where(and(...conditions))
-      .orderBy(userStories.gxpId);
+      .orderBy(userStories.gxpId)
+      .limit(pagination.limit)
+      .offset(pagination.skip);
+
+    return createPaginatedResponse(data, total, pagination.page, pagination.limit);
   }
 
   /**
@@ -123,11 +148,12 @@ export class ArtifactsController {
   }
 
   /**
-   * Get all specs
+   * Get all specs (with pagination)
    */
   @Get('specs')
   async getSpecs(
     @Param('id') repositoryId: string,
+    @Query() pagination: PaginationDto,
     @Query('parent_id') parentId?: string,
     @Query('tier') tier?: string,
   ) {
@@ -141,11 +167,22 @@ export class ArtifactsController {
       conditions.push(eq(specs.verificationTier, tier as any));
     }
 
-    return db
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(specs)
+      .where(and(...conditions));
+
+    // Get paginated data
+    const data = await db
       .select()
       .from(specs)
       .where(and(...conditions))
-      .orderBy(specs.gxpId);
+      .orderBy(specs.gxpId)
+      .limit(pagination.limit)
+      .offset(pagination.skip);
+
+    return createPaginatedResponse(data, total, pagination.page, pagination.limit);
   }
 
   /**
@@ -171,11 +208,12 @@ export class ArtifactsController {
   }
 
   /**
-   * Get all evidence
+   * Get all evidence (with pagination)
    */
   @Get('evidence')
   async getEvidence(
     @Param('id') repositoryId: string,
+    @Query() pagination: PaginationDto,
     @Query('tier') tier?: string,
   ) {
     const conditions = [eq(evidence.repositoryId, repositoryId)];
@@ -184,11 +222,22 @@ export class ArtifactsController {
       conditions.push(eq(evidence.verificationTier, tier as any));
     }
 
-    return db
+    // Get total count
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(evidence)
+      .where(and(...conditions));
+
+    // Get paginated data
+    const data = await db
       .select()
       .from(evidence)
       .where(and(...conditions))
-      .orderBy(evidence.createdAt);
+      .orderBy(evidence.createdAt)
+      .limit(pagination.limit)
+      .offset(pagination.skip);
+
+    return createPaginatedResponse(data, total, pagination.page, pagination.limit);
   }
 
   /**

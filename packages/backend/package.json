@@ -29,6 +29,7 @@
     "gray-matter": "^4.0.3",
     "ioredis": "^5.4.0",
     "node-jose": "^2.2.0",
+    "pdfkit": "^0.15.0",
     "postgres": "^3.4.0",
     "zod": "^3.23.0",
     "class-validator": "^0.14.1",
