@@ -323,7 +323,7 @@ export const productsApi = {
   getCompliance: (productId: string) =>
     api.get<ProductCompliance>(`/products/${productId}/compliance`),
   getRisk: (productId: string) =>
-    api.get<RiskAssessment>(`/products/${productId}/risk`),
+    api.get<RiskAssessment>(`/products/${productId}/risk-assessment`),
   getTraceability: (productId: string) =>
     api.get(`/products/${productId}/traceability`),
 };

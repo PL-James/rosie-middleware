@@ -8,13 +8,16 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductAggregationService } from './product-aggregation.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { LinkRepositoryDto } from './dto/link-repository.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('api/v1/products')
+@UseGuards(JwtAuthGuard)
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,

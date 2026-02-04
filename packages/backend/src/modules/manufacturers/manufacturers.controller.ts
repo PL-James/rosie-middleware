@@ -8,11 +8,14 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ManufacturersService } from './manufacturers.service';
 import { CreateManufacturerDto } from './dto/create-manufacturer.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('api/v1/manufacturers')
+@UseGuards(JwtAuthGuard)
 export class ManufacturersController {
   constructor(private readonly manufacturersService: ManufacturersService) {}
 
