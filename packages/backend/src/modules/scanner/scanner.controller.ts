@@ -3,10 +3,12 @@ import {
   Post,
   Get,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { ScannerService } from './scanner.service';
+import { PaginationDto } from '@/common/pagination.dto';
 
 @Controller('api/v1')
 export class ScannerController {
@@ -28,7 +30,14 @@ export class ScannerController {
   }
 
   @Get('repositories/:id/scans')
-  getRepositoryScans(@Param('id') id: string) {
-    return this.scannerService.getRepositoryScans(id);
+  getRepositoryScans(
+    @Param('id') id: string,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.scannerService.getRepositoryScans(
+      id,
+      pagination.page,
+      pagination.limit,
+    );
   }
 }
