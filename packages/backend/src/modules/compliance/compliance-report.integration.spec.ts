@@ -17,14 +17,16 @@ import { auditLog, repositories } from '@/db/schema';
  * Validates CSV injection prevention in audit trail export with real database operations.
  */
 
-const TEST_DB_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
+const TEST_DB_URL = process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
 /**
  * Integration tests are skipped in CI because they require a live PostgreSQL database
  * with migrations applied. CI environment does not have TEST_DATABASE_URL configured.
  * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
  */
-describe.skip('ComplianceReportService - CSV Export Integration', () => {
+const describeIntegration = process.env.CI ? describe.skip : describe;
+
+describeIntegration('ComplianceReportService - CSV Export Integration', () => {
   let testClient: ReturnType<typeof postgres>;
   let db: ReturnType<typeof drizzle>;
   let service: ComplianceReportService;

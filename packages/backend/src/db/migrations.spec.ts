@@ -14,14 +14,16 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
  * including proper pgcrypto extension installation for UUID generation.
  */
 
-const TEST_DB_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
+const TEST_DB_URL = process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
 /**
  * Integration tests are skipped in CI because they require a live PostgreSQL database
  * with migrations applied. CI environment does not have TEST_DATABASE_URL configured.
  * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
  */
-describe.skip('Database Migrations - pgcrypto Extension', () => {
+const describeIntegration = process.env.CI ? describe.skip : describe;
+
+describeIntegration('Database Migrations - pgcrypto Extension', () => {
   let testClient: ReturnType<typeof postgres>;
   let db: ReturnType<typeof drizzle>;
 

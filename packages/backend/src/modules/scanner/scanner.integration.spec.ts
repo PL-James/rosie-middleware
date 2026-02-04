@@ -14,14 +14,16 @@ import { scans, repositories } from '@/db/schema';
  * Validates scan pagination with real database operations.
  */
 
-const TEST_DB_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
+const TEST_DB_URL = process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
 /**
  * Integration tests are skipped in CI because they require a live PostgreSQL database
  * with migrations applied. CI environment does not have TEST_DATABASE_URL configured.
  * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
  */
-describe.skip('ScannerService - Pagination Integration', () => {
+const describeIntegration = process.env.CI ? describe.skip : describe;
+
+describeIntegration('ScannerService - Pagination Integration', () => {
   let testClient: ReturnType<typeof postgres>;
   let db: ReturnType<typeof drizzle>;
   let testRepoId: string;
