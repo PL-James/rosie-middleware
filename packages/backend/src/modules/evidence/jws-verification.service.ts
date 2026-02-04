@@ -162,7 +162,7 @@ export class JwsVerificationService {
       Buffer.from(parts[0], 'base64url');
       Buffer.from(parts[1], 'base64url');
       Buffer.from(parts[2], 'base64url');
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS parts must be valid base64url encoded strings',
@@ -178,7 +178,7 @@ export class JwsVerificationService {
           error: 'JWS header must include "alg" field',
         };
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS header must be valid JSON',
@@ -188,7 +188,7 @@ export class JwsVerificationService {
     // Validate payload structure
     try {
       JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         error: 'JWS payload must be valid JSON',
