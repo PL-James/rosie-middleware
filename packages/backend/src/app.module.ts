@@ -7,6 +7,10 @@ import { ArtifactsModule } from './modules/artifacts/artifacts.module';
 import { RepositoriesModule } from './modules/repositories/repositories.module';
 import { ScannerModule } from './modules/scanner/scanner.module';
 import { TraceabilityModule } from './modules/traceability/traceability.module';
+import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
+import { ProductsModule } from './modules/products/products.module';
+import { EvidenceModule } from './modules/evidence/evidence.module';
+import { ComplianceModule } from './modules/compliance/compliance.module';
 
 @Module({
   imports: [
@@ -26,6 +30,10 @@ import { TraceabilityModule } from './modules/traceability/traceability.module';
     RepositoriesModule,
     ScannerModule,
     TraceabilityModule,
+    EvidenceModule,
+    ComplianceModule,
+    ManufacturersModule,
+    ProductsModule,
   ],
 })
 export class AppModule {}

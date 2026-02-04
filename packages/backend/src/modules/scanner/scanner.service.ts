@@ -295,6 +295,33 @@ export class ScannerService {
         this.logger.log(`[${scanId}] Traceability validation: all links valid`);
       }
 
+      // Phase 5.6: Evidence Verification
+      this.logger.log(`[${scanId}] Phase 5.6: Verifying evidence signatures`);
+      if (artifacts.evidence.length > 0) {
+        let verifiedCount = 0;
+        for (const evidenceArtifact of artifacts.evidence) {
+          try {
+            // JWS verification is already done during parsing in artifact-parser.service.ts
+            // The isSignatureValid field is set during insertion
+            // Here we just log the verification status
+            if (evidenceArtifact.isSignatureValid) {
+              verifiedCount++;
+            }
+          } catch (error) {
+            this.logger.warn(
+              `[${scanId}] Failed to verify evidence ${evidenceArtifact.fileName}: ${error.message}`,
+            );
+          }
+        }
+        this.logger.log(
+          `[${scanId}] Evidence verification: ${verifiedCount}/${artifacts.evidence.length} valid signatures`,
+        );
+      } else {
+        this.logger.log(
+          `[${scanId}] No evidence artifacts to verify`,
+        );
+      }
+
       // Phase 6: Notify
       this.logger.log(`[${scanId}] Phase 6: Notify`);
       const durationMs = Date.now() - startTime;
