@@ -22,7 +22,34 @@ Implemented in Artifact Parser Service:
 ```typescript
 async parseJWS(fileContent: string): Promise<ParsedJWS> {
   try {
-    const jws = await jose.JWS.createVerify().verify(fileContent);
+    // Load public key from system configuration
+    const publicKey = await this.getPublicKeyFromConfig();
+
+    if (!publicKey) {
+      // Parse structure without cryptographic verification
+      const parts = fileContent.split('.');
+      if (parts.length !== 3) {
+        throw new Error('Invalid JWS format');
+      }
+
+      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      const signature = parts[2];
+
+      this.logger.warn('JWS parsed without signature verification - no public key configured');
+
+      return {
+        header,
+        payload,
+        signature,
+        isValid: false,
+        error: 'No verification key configured',
+      };
+    }
+
+    // Create keystore and verify signature
+    const keystore = await jose.JWK.asKeyStore({ keys: [JSON.parse(publicKey)] });
+    const jws = await jose.JWS.createVerify(keystore).verify(fileContent);
 
     return {
       header: jws.header,

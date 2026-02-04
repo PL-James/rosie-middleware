@@ -191,8 +191,8 @@ curl http://localhost:3000/api/v1/repositories/{id}/specs
 
 - **ROSIE RFC-001**: GxP Artifact Specification
 - **21 CFR Part 11**: Electronic Records; Electronic Signatures
-- **rosie-middleware/ARCHITECTURE.md**: System architecture documentation
-- **rosie-middleware/PROJECT_SUMMARY.md**: Project overview and implementation status
+- **../ARCHITECTURE.md**: System architecture documentation
+- **../PROJECT_SUMMARY.md**: Project overview and implementation status
 
 ---
 

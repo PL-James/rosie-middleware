@@ -19,9 +19,36 @@ Verifies JWS parsing extracts cryptographic evidence correctly.
 ## Implementation
 
 ```typescript
-async parseJWS(fileContent: string): Promise<ParsedJWS> {
+async parseJWS(fileContent: string, publicKey?: string): Promise<ParsedJWS> {
   try {
-    const jws = await jose.JWS.createVerify().verify(fileContent);
+    // If no key provided, attempt to extract without verification
+    // (signature will be marked as unverified)
+    if (!publicKey) {
+      // Parse structure without cryptographic verification
+      const parts = fileContent.split('.');
+      if (parts.length !== 3) {
+        throw new Error('Invalid JWS format');
+      }
+
+      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      const signature = parts[2];
+
+      return {
+        header,
+        payload,
+        signature,
+        isValid: false,
+        error: 'No verification key provided',
+      };
+    }
+
+    // Load public key from configuration or system context
+    const keystore = await jose.JWK.asKeyStore({ keys: [JSON.parse(publicKey)] });
+
+    // Verify signature with public key
+    const jws = await jose.JWS.createVerify(keystore).verify(fileContent);
+
     return {
       header: jws.header,
       payload: JSON.parse(jws.payload.toString()),
@@ -29,7 +56,13 @@ async parseJWS(fileContent: string): Promise<ParsedJWS> {
       isValid: true,
     };
   } catch (error) {
-    return { header: null, payload: null, signature: null, isValid: false, error: error.message };
+    return {
+      header: null,
+      payload: null,
+      signature: null,
+      isValid: false,
+      error: error.message
+    };
   }
 }
 ```

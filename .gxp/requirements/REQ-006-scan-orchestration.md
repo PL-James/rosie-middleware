@@ -79,24 +79,35 @@ Supports 21 CFR Part 11 § 11.10(c) - Document sequencing to ensure scanning ope
 ## Scanning Pipeline Details
 
 ```typescript
-async scanRepository(repositoryId: string, commitSha?: string): Promise<Scan> {
-  // Phase 1: Discovery
-  const artifacts = await this.discoveryPhase(repositoryId);
+async scanRepository(repositoryId: string, commitSha?: string): Promise<string> {
+  // Create scan record
+  const scan = await this.createScan(repositoryId);
+  const scanId = scan.id;
 
-  // Phase 2: Fetch
-  const contents = await this.fetchPhase(repositoryId, artifacts, commitSha);
+  try {
+    // Phase 1: Discovery
+    const artifacts = await this.discoveryPhase(repositoryId);
 
-  // Phase 3: Parse
-  const parsed = await this.parsePhase(contents);
+    // Phase 2: Fetch
+    const contents = await this.fetchPhase(repositoryId, artifacts, commitSha);
 
-  // Phase 4: Validate
-  const validated = await this.validatePhase(parsed);
+    // Phase 3: Parse
+    const parsed = await this.parsePhase(contents);
 
-  // Phase 5: Persist
-  await this.persistPhase(repositoryId, validated);
+    // Phase 4: Validate
+    const validated = await this.validatePhase(parsed);
 
-  // Phase 6: Notify
-  await this.notifyPhase(repositoryId, scanId);
+    // Phase 5: Persist
+    const persistedScan = await this.persistPhase(repositoryId, scanId, validated);
+
+    // Phase 6: Notify
+    await this.notifyPhase(repositoryId, scanId);
+
+    return scanId;
+  } catch (error) {
+    await this.markScanFailed(scanId, error);
+    throw error;
+  }
 }
 ```
 
