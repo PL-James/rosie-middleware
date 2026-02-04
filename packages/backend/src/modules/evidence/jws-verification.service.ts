@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as jose from 'node-jose';
+import {
+  getJwsPublicKeys,
+  getJwsVerificationConfig,
+} from './jws-keystore.config';
 
 export interface JwsVerificationResult {
   isValid: boolean;
@@ -12,22 +16,38 @@ export interface JwsVerificationResult {
 export class JwsVerificationService {
   private readonly logger = new Logger(JwsVerificationService.name);
   private keystore: any;
+  private config = getJwsVerificationConfig();
 
   constructor() {
-    // Initialize empty keystore
-    // In production, load keys from configuration or key management service
+    // Initialize keystore with configured keys
     this.initializeKeystore();
   }
 
   /**
-   * Initialize the keystore with signing keys
+   * Initialize the keystore with signing keys from configuration
    */
   private async initializeKeystore() {
     try {
       this.keystore = jose.JWK.createKeyStore();
-      this.logger.log('JWS keystore initialized');
+
+      // Load public keys from configuration
+      const publicKeys = getJwsPublicKeys();
+
+      for (const pemKey of publicKeys) {
+        try {
+          await this.keystore.add(pemKey, 'pem');
+          this.logger.log('Public key added to keystore');
+        } catch (error) {
+          this.logger.error('Failed to add public key:', error.message);
+        }
+      }
+
+      this.logger.log(
+        `JWS keystore initialized with ${this.keystore.all().length} keys`,
+      );
     } catch (error) {
       this.logger.error('Failed to initialize keystore:', error);
+      throw error;
     }
   }
 
@@ -61,33 +81,36 @@ export class JwsVerificationService {
         header: result.header,
       };
     } catch (error) {
-      this.logger.warn(`JWS verification failed: ${error.message}`);
+      if (this.config.logFailures) {
+        this.logger.warn(`JWS verification failed: ${error.message}`);
+      }
 
-      // For now, we'll accept unsigned JWS for testing
-      // In production, this should be stricter
-      try {
-        const parts = jwsString.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(
-            Buffer.from(parts[1], 'base64url').toString(),
-          );
-          const header = JSON.parse(
-            Buffer.from(parts[0], 'base64url').toString(),
-          );
+      // Development mode fallback: accept unsigned JWS
+      if (this.config.allowUnsignedInDev) {
+        try {
+          const parts = jwsString.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(
+              Buffer.from(parts[1], 'base64url').toString(),
+            );
+            const header = JSON.parse(
+              Buffer.from(parts[0], 'base64url').toString(),
+            );
 
-          this.logger.warn(
-            'Accepting unsigned JWS (development mode) - payload decoded successfully',
-          );
+            this.logger.warn(
+              'Accepting unsigned JWS (development mode) - payload decoded successfully',
+            );
 
-          return {
-            isValid: false, // Mark as invalid but include payload
-            payload,
-            header,
-            error: 'Signature verification failed (key not found)',
-          };
+            return {
+              isValid: false, // Mark as invalid but include payload
+              payload,
+              header,
+              error: 'Signature verification failed (development mode fallback)',
+            };
+          }
+        } catch (decodeError) {
+          this.logger.error('Failed to decode JWS payload:', decodeError);
         }
-      } catch (decodeError) {
-        this.logger.error('Failed to decode JWS payload:', decodeError);
       }
 
       return {

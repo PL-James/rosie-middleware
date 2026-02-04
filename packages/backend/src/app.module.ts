@@ -11,6 +11,7 @@ import { ManufacturersModule } from './modules/manufacturers/manufacturers.modul
 import { ProductsModule } from './modules/products/products.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ComplianceModule } from './modules/compliance/compliance.module';
       },
     ]),
     HealthModule,
+    AuthModule,
     GitHubModule,
     ArtifactsModule,
     RepositoriesModule,
