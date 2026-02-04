@@ -26,7 +26,7 @@ export class JwsVerificationService {
     try {
       this.keystore = jose.JWK.createKeyStore();
       this.logger.log('JWS keystore initialized');
-    } catch (_error) {
+    } catch (error) {
       this.logger.error('Failed to initialize keystore:', error);
     }
   }
@@ -60,7 +60,7 @@ export class JwsVerificationService {
         payload,
         header: result.header,
       };
-    } catch (_error) {
+    } catch (error) {
       this.logger.warn(`JWS verification failed: ${error.message}`);
 
       // For now, we'll accept unsigned JWS for testing
@@ -182,7 +182,7 @@ export class JwsVerificationService {
     try {
       await this.keystore.add(jwkKey);
       this.logger.log('Public key added to keystore');
-    } catch (_error) {
+    } catch (error) {
       this.logger.error('Failed to add public key:', error);
       throw error;
     }
