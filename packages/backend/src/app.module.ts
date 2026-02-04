@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { HealthModule } from './modules/health/health.module';
 import { GitHubModule } from './modules/github/github.module';
 import { ArtifactsModule } from './modules/artifacts/artifacts.module';
@@ -25,6 +27,12 @@ import { AuthModule } from './modules/auth/auth.module';
         limit: 100, // 100 requests per minute
       },
     ]),
+    // Serve frontend static files
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '../../..', 'frontend', 'dist'),
+      exclude: ['/api*'],
+      serveRoot: '/',
+    }),
     HealthModule,
     AuthModule,
     GitHubModule,
