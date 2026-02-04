@@ -19,6 +19,7 @@ export default function Products() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manufacturerFilter, riskFilter]);
 
   const fetchData = async () => {
