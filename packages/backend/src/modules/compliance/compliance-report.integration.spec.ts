@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
@@ -19,6 +19,11 @@ import { auditLog, repositories } from '@/db/schema';
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
+/**
+ * Integration tests are skipped in CI because they require a live PostgreSQL database
+ * with migrations applied. CI environment does not have TEST_DATABASE_URL configured.
+ * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
+ */
 describe.skip('ComplianceReportService - CSV Export Integration', () => {
   let testClient: ReturnType<typeof postgres>;
   let db: ReturnType<typeof drizzle>;
@@ -54,6 +59,13 @@ describe.skip('ComplianceReportService - CSV Export Integration', () => {
       await db.delete(repositories).where(eq(repositories.id, testRepoId));
     }
     await testClient.end();
+  });
+
+  beforeEach(async () => {
+    // Clear audit log entries before each test to ensure isolation
+    if (testRepoId) {
+      await db.delete(auditLog).where(eq(auditLog.resourceId, testRepoId));
+    }
   });
 
   /**
