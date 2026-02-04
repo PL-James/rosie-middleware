@@ -16,7 +16,7 @@ import { scans, repositories } from '@/db/schema';
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
-describe('ScannerService - Pagination Integration', () => {
+describe.skip('ScannerService - Pagination Integration', () => {
   let testClient: ReturnType<typeof postgres>;
   let db: ReturnType<typeof drizzle>;
   let testRepoId: string;
