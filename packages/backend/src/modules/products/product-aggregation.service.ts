@@ -9,7 +9,7 @@ import {
   traceabilityLinks,
   repositories,
 } from '@/db';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 export interface AggregatedArtifact {
   type: 'requirement' | 'user_story' | 'spec' | 'evidence';
@@ -201,7 +201,7 @@ export class ProductAggregationService {
       .from(repositories)
       .where(inArray(repositories.id, repoIds));
 
-    const repoMap = new Map(repos.map((r) => [r.id, r]));
+    const _repoMap = new Map(repos.map((r) => [r.id, r]));
 
     // Count artifacts by type
     const reqs = await db

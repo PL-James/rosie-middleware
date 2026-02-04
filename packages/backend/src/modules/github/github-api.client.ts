@@ -34,8 +34,8 @@ export class GitHubApiClient {
    */
   parseGitHubUrl(url: string): { owner: string; repo: string } | null {
     const patterns = [
-      /github\.com\/([^\/]+)\/([^\/\.]+)/,
-      /github\.com\/([^\/]+)\/([^\/]+)\.git/,
+      /github\.com\/([^/]+)\/([^/.]+)/,
+      /github\.com\/([^/]+)\/([^/]+)\.git/,
     ];
 
     for (const pattern of patterns) {
@@ -225,7 +225,7 @@ export class GitHubApiClient {
     try {
       await this.getFileContent(owner, repo, '.gxp/system_context.md', ref);
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

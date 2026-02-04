@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Param,
   Query,
   Header,
@@ -11,6 +10,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ComplianceReportService } from './compliance-report.service';
 import { RiskAssessmentService } from './risk-assessment.service';
+import { PdfGeneratorService } from './pdf-generator.service';
 
 @ApiTags('compliance')
 @Controller('api/v1/repositories/:repositoryId/compliance')
@@ -18,6 +18,7 @@ export class ComplianceController {
   constructor(
     private complianceReportService: ComplianceReportService,
     private riskAssessmentService: RiskAssessmentService,
+    private pdfGeneratorService: PdfGeneratorService,
   ) {}
 
   @Get('report')
@@ -66,6 +67,44 @@ export class ComplianceController {
   ) {
     const pdfUrl = await this.complianceReportService.exportToPdf(reportId);
     return { pdfUrl };
+  }
+
+  @Get('export/pdf/download')
+  @ApiOperation({ summary: 'Download compliance report as PDF (direct stream)' })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file',
+    headers: {
+      'Content-Type': { description: 'application/pdf' },
+      'Content-Disposition': {
+        description: 'attachment; filename="compliance-report.pdf"',
+      },
+    },
+  })
+  @Header('Content-Type', 'application/pdf')
+  async downloadPdf(
+    @Param('repositoryId') repositoryId: string,
+    @Res() res: Response,
+  ) {
+    // Generate the compliance report data
+    const reportData = await this.complianceReportService.generateReport(
+      repositoryId,
+      'full',
+    );
+
+    // Generate PDF stream
+    const pdfStream = await this.pdfGeneratorService.generateCompliancePdf(
+      reportData as any,
+    );
+
+    // Set headers
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="compliance-report-${repositoryId}.pdf"`,
+    );
+
+    // Pipe the stream to the response
+    pdfStream.pipe(res);
   }
 
   @Get('export/csv')
