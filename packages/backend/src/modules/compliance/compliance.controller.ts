@@ -94,7 +94,7 @@ export class ComplianceController {
 
     // Generate PDF stream
     const pdfStream = await this.pdfGeneratorService.generateCompliancePdf(
-      reportData,
+      reportData as any,
     );
 
     // Set headers
