@@ -313,7 +313,10 @@ export const evidence = pgTable(
       table.repositoryId,
     ),
     specIdIdx: index('evidence_spec_id_idx').on(table.specId),
-    gxpIdIdx: index('evidence_gxp_id_idx').on(table.gxpId),
+    gxpIdIdx: uniqueIndex('evidence_gxp_id_idx').on(
+      table.repositoryId,
+      table.gxpId,
+    ),
     verificationTierIdx: index('evidence_verification_tier_idx').on(
       table.verificationTier,
     ),

@@ -43,6 +43,13 @@
       "when": 1770312997148,
       "tag": "0005_dazzling_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770313646564,
+      "tag": "0006_powerful_stature",
+      "breakpoints": true
     }
   ]
 }
