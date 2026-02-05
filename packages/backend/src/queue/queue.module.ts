@@ -1,4 +1,4 @@
-import { Module, DynamicModule } from '@nestjs/common';
+import { Module, DynamicModule, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScannerProcessor } from './processors/scanner.processor';
@@ -95,8 +95,8 @@ export class QueueModule {
             },
           },
         }),
-        // Import ScannerModule to access ScannerService
-        ScannerModule,
+        // Import ScannerModule to access ScannerService (with forwardRef to break circular dependency)
+        forwardRef(() => ScannerModule),
         // Import WebSocketModule to access ScanProgressGateway
         WebSocketModule,
       ],

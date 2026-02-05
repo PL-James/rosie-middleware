@@ -1,5 +1,5 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { ScannerService } from '@/modules/scanner/scanner.service';
 import { ScanProgressGateway } from '@/websocket/scan-progress.gateway';
@@ -20,10 +20,12 @@ export class ScannerProcessor extends WorkerHost {
   private readonly logger = new Logger(ScannerProcessor.name);
 
   constructor(
+    @Inject(forwardRef(() => ScannerService))
     private readonly scannerService: ScannerService,
     private readonly scanProgressGateway: ScanProgressGateway,
   ) {
     super();
+    this.logger.log('✅ ScannerProcessor initialized - worker ready to process jobs');
   }
 
   async process(job: Job<ScanJobData>): Promise<void> {
