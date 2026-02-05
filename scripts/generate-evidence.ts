@@ -226,6 +226,11 @@ function findTestsForSpec(
       continue;
     }
 
+    // Skip if testResults doesn't exist or isn't an array
+    if (!fileResult.testResults || !Array.isArray(fileResult.testResults)) {
+      continue;
+    }
+
     for (const test of fileResult.testResults) {
       results.push({
         name: test.title,
