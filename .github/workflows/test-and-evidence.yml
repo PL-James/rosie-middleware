@@ -9,6 +9,9 @@ on:
 jobs:
   test-and-evidence:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Allow pushing commits
+      pull-requests: write  # Allow commenting on PRs
 
     services:
       postgres:
