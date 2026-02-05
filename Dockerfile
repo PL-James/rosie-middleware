@@ -33,6 +33,7 @@ RUN npm ci --production --workspace=backend
 # Copy built artifacts
 COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
 COPY --from=builder /app/packages/backend/drizzle ./packages/backend/drizzle
+COPY --from=builder /app/packages/backend/src/db/migrate.js ./packages/backend/src/db/migrate.js
 COPY --from=builder /app/packages/frontend/dist ./packages/frontend/dist
 
 # Expose port
