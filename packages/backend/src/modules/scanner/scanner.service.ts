@@ -1,4 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import {
   db,
   scans,
@@ -7,6 +9,7 @@ import {
   userStories,
   specs,
   evidence,
+  fileChecksums,
 } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { GitHubApiClient } from '../github/github-api.client';
@@ -40,6 +43,7 @@ export class ScannerService {
     private artifactParser: ArtifactParserService,
     private repositoriesService: RepositoriesService,
     private traceabilityValidator: TraceabilityValidatorService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   /**
@@ -78,12 +82,26 @@ export class ScannerService {
   }
 
   /**
+   * Execute the 6-phase scan pipeline with progress callbacks
+   * Public method for use by BullMQ processor
+   */
+  async executeScanWithProgress(
+    scanId: string,
+    owner: string,
+    repo: string,
+    onProgress?: (progress: number, phase: string) => Promise<void>,
+  ): Promise<void> {
+    return this.executeScan(scanId, owner, repo, onProgress);
+  }
+
+  /**
    * Execute the 6-phase scan pipeline
    */
   private async executeScan(
     scanId: string,
     owner: string,
     repo: string,
+    onProgress?: (progress: number, phase: string) => Promise<void>,
   ): Promise<void> {
     const startTime = Date.now();
 
@@ -99,6 +117,7 @@ export class ScannerService {
 
       // Phase 1: Discovery
       this.logger.log(`[${scanId}] Phase 1: Discovery`);
+      if (onProgress) await onProgress(10, 'Discovering files');
       const commitSha = await this.githubClient.getLatestCommitSha(
         owner,
         repo,
@@ -120,9 +139,63 @@ export class ScannerService {
         `[${scanId}] Found ${gxpFiles.length} files in .gxp directory`,
       );
 
-      // Phase 2: Fetch
-      this.logger.log(`[${scanId}] Phase 2: Fetch`);
-      const filePaths = gxpFiles.map((f) => f.path);
+      // Phase 1.5: Delta Detection (Incremental Scanning)
+      this.logger.log(`[${scanId}] Phase 1.5: Delta Detection`);
+      if (onProgress) await onProgress(20, 'Detecting file changes');
+
+      // Get scan record to access repositoryId
+      const [scanRecord] = await db.select().from(scans).where(eq(scans.id, scanId));
+      const previousChecksums = await db
+        .select()
+        .from(fileChecksums)
+        .where(eq(fileChecksums.repositoryId, scanRecord.repositoryId));
+
+      // Create a map for fast lookup
+      const checksumMap = new Map(
+        previousChecksums.map((cs) => [cs.filePath, cs.sha256Hash]),
+      );
+
+      // Identify changed files by comparing GitHub blob SHAs with stored checksums
+      // GitHub provides the SHA-1 hash in the tree, which we can use as our checksum
+      const changedFiles = gxpFiles.filter((file) => {
+        const previousHash = checksumMap.get(file.path);
+        // If file is new or hash changed, include it
+        return !previousHash || previousHash !== file.sha;
+      });
+
+      // Identify deleted files (files in DB but not in current tree)
+      const currentFilePaths = new Set(gxpFiles.map((f) => f.path));
+      const deletedFiles = previousChecksums.filter(
+        (cs) => !currentFilePaths.has(cs.filePath),
+      );
+
+      const totalFiles = gxpFiles.length;
+      const skippedFiles = totalFiles - changedFiles.length;
+      const deletedCount = deletedFiles.length;
+
+      this.logger.log(
+        `[${scanId}] Delta Detection Results:`,
+      );
+      this.logger.log(
+        `  - Total files: ${totalFiles}`,
+      );
+      this.logger.log(
+        `  - Changed files: ${changedFiles.length}`,
+      );
+      this.logger.log(
+        `  - Skipped (unchanged): ${skippedFiles}`,
+      );
+      this.logger.log(
+        `  - Deleted files: ${deletedCount}`,
+      );
+      this.logger.log(
+        `  - Performance: Reduced API calls by ${Math.round((skippedFiles / totalFiles) * 100)}%`,
+      );
+
+      // Phase 2: Fetch (only changed files)
+      this.logger.log(`[${scanId}] Phase 2: Fetch (${changedFiles.length} changed files)`);
+      if (onProgress) await onProgress(30, `Fetching ${changedFiles.length} changed files`);
+      const filePaths = changedFiles.map((f) => f.path);
       const files = await this.githubClient.getFilesContent(
         owner,
         repo,
@@ -134,6 +207,7 @@ export class ScannerService {
 
       // Phase 3: Parse
       this.logger.log(`[${scanId}] Phase 3: Parse`);
+      if (onProgress) await onProgress(50, 'Parsing artifacts');
       const artifacts = {
         systemContext: null as any,
         requirements: [] as any[],
@@ -179,12 +253,14 @@ export class ScannerService {
 
       // Phase 4: Validate (basic validation - traceability in Phase 2)
       this.logger.log(`[${scanId}] Phase 4: Validate`);
+      if (onProgress) await onProgress(60, 'Validating artifacts');
       if (!artifacts.systemContext) {
         throw new Error('Missing system_context.md');
       }
 
       // Phase 5: Persist
       this.logger.log(`[${scanId}] Phase 5: Persist`);
+      if (onProgress) await onProgress(70, 'Persisting to database');
       const [scan] = await db.select().from(scans).where(eq(scans.id, scanId));
 
       // Insert system context
@@ -282,8 +358,51 @@ export class ScannerService {
         );
       }
 
+      // Phase 5.4: Update File Checksums
+      this.logger.log(`[${scanId}] Phase 5.4: Updating file checksums`);
+      if (onProgress) await onProgress(80, 'Updating file checksums');
+
+      // Update checksums for changed files
+      if (changedFiles.length > 0) {
+        for (const file of changedFiles) {
+          await db
+            .insert(fileChecksums)
+            .values({
+              repositoryId: scanRecord.repositoryId,
+              filePath: file.path,
+              sha256Hash: file.sha, // GitHub blob SHA
+              lastScannedAt: new Date(),
+              // We'll link artifactId/artifactType in a future enhancement
+            })
+            .onConflictDoUpdate({
+              target: [fileChecksums.repositoryId, fileChecksums.filePath],
+              set: {
+                sha256Hash: file.sha,
+                lastScannedAt: new Date(),
+                updatedAt: new Date(),
+              },
+            });
+        }
+        this.logger.log(
+          `[${scanId}] Updated ${changedFiles.length} file checksums`,
+        );
+      }
+
+      // Handle deleted files - remove their checksums
+      if (deletedCount > 0) {
+        for (const deletedFile of deletedFiles) {
+          await db
+            .delete(fileChecksums)
+            .where(eq(fileChecksums.id, deletedFile.id));
+        }
+        this.logger.log(
+          `[${scanId}] Removed ${deletedCount} checksums for deleted files`,
+        );
+      }
+
       // Phase 5.5: Build Traceability Graph
       this.logger.log(`[${scanId}] Phase 5.5: Building traceability graph`);
+      if (onProgress) await onProgress(85, 'Building traceability graph');
       await this.traceabilityValidator.buildTraceabilityGraph(scan.repositoryId);
 
       // Detect broken links
@@ -298,6 +417,7 @@ export class ScannerService {
 
       // Phase 5.6: Evidence Verification
       this.logger.log(`[${scanId}] Phase 5.6: Verifying evidence signatures`);
+      if (onProgress) await onProgress(90, 'Verifying evidence');
       if (artifacts.evidence.length > 0) {
         let verifiedCount = 0;
         for (const evidenceArtifact of artifacts.evidence) {
@@ -325,6 +445,7 @@ export class ScannerService {
 
       // Phase 6: Notify
       this.logger.log(`[${scanId}] Phase 6: Notify`);
+      if (onProgress) await onProgress(95, 'Completing scan');
       const durationMs = Date.now() - startTime;
 
       // Update scan record
@@ -351,6 +472,10 @@ export class ScannerService {
         scanId,
         'completed',
       );
+
+      // Invalidate all caches for this repository
+      this.logger.log(`[${scanId}] Invalidating caches for repository`);
+      await this.invalidateRepositoryCaches(scan.repositoryId);
 
       this.logger.log(
         `[${scanId}] Scan completed in ${durationMs}ms - ${requirementRecords.length + userStoryRecords.length + specRecords.length + artifacts.evidence.length} artifacts created`,
@@ -431,5 +556,31 @@ export class ScannerService {
       .offset(offset);
 
     return createPaginatedResponse(scanRecords, total, validatedPage, validatedLimit);
+  }
+
+  /**
+   * Invalidate all cached data for a repository
+   * Called after scan completion to ensure fresh data
+   */
+  private async invalidateRepositoryCaches(repositoryId: string): Promise<void> {
+    const cacheKeys = [
+      `/api/v1/repositories/${repositoryId}/system-context`,
+      `/api/v1/repositories/${repositoryId}/requirements`,
+      `/api/v1/repositories/${repositoryId}/user-stories`,
+      `/api/v1/repositories/${repositoryId}/specs`,
+      `/api/v1/repositories/${repositoryId}/evidence`,
+      `/api/v1/repositories/${repositoryId}/compliance/report`,
+      `/api/v1/repositories/${repositoryId}/compliance/risk-assessment`,
+    ];
+
+    for (const key of cacheKeys) {
+      try {
+        await this.cacheManager.del(key);
+        this.logger.debug(`Invalidated cache for ${key}`);
+      } catch (error) {
+        // Log but don't fail if cache invalidation fails
+        this.logger.warn(`Failed to invalidate cache for ${key}:`, error.message);
+      }
+    }
   }
 }

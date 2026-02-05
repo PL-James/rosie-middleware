@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { ScannerService } from './scanner.service';
 import { ScannerController } from './scanner.controller';
 import { GitHubModule } from '../github/github.module';
@@ -7,7 +8,15 @@ import { RepositoriesModule } from '../repositories/repositories.module';
 import { TraceabilityModule } from '../traceability/traceability.module';
 
 @Module({
-  imports: [GitHubModule, ArtifactsModule, RepositoriesModule, TraceabilityModule],
+  imports: [
+    GitHubModule,
+    ArtifactsModule,
+    RepositoriesModule,
+    TraceabilityModule,
+    BullModule.registerQueue({
+      name: 'scanner',
+    }),
+  ],
   providers: [ScannerService],
   controllers: [ScannerController],
   exports: [ScannerService],

@@ -1,169 +1,379 @@
 import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
-import { Readable } from 'stream';
+import type { ComplianceReport } from './compliance-report.service';
 
-interface ComplianceReportData {
-  repositoryName: string;
-  generatedAt: Date;
-  complianceScore: number;
-  overallRisk: string;
-  sections: {
-    executiveSummary: any;
-    cfr21Part11: any;
-    riskAssessment: any;
-    evidenceQuality: any;
-    auditTrail: any;
-  };
-}
-
+/**
+ * PDF Generator Service
+ *
+ * Generates professional PDF documents for compliance reports using PDFKit.
+ * Supports executive summaries, CFR compliance sections, risk assessments,
+ * evidence quality metrics, and audit trail summaries.
+ */
 @Injectable()
 export class PdfGeneratorService {
   private readonly logger = new Logger(PdfGeneratorService.name);
 
   /**
-   * Generate PDF report from compliance data
-   * Returns a readable stream that can be piped to response or saved to file
+   * Generate a compliance report PDF
+   *
+   * @param report - Compliance report data
+   * @returns PDF as Buffer
    */
-  async generateCompliancePdf(data: ComplianceReportData): Promise<Readable> {
+  async generateComplianceReportPdf(
+    report: ComplianceReport,
+  ): Promise<Buffer> {
+    this.logger.log(`Generating PDF for compliance report ${report.id}`);
+
     return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        info: {
+          Title: 'ROSIE Compliance Report',
+          Author: report.generatedBy || 'ROSIE Middleware',
+          Subject: `Compliance Report for ${report.sections.executiveSummary?.projectName}`,
+          CreationDate: report.generatedAt,
+        },
+      });
 
-        // Collect chunks to return as stream
-        const chunks: Buffer[] = [];
-        doc.on('data', (chunk) => chunks.push(chunk));
-        doc.on('end', () => {
-          const pdfBuffer = Buffer.concat(chunks);
-          const stream = Readable.from(pdfBuffer);
-          resolve(stream);
-        });
-        doc.on('error', reject);
+      const chunks: Buffer[] = [];
 
-        // Header
-        this.addHeader(doc, data);
+      // Collect PDF data chunks
+      doc.on('data', (chunk) => chunks.push(chunk));
 
-        // Executive Summary
-        this.addExecutiveSummary(doc, data);
+      // Resolve promise when PDF is complete
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(chunks);
+        this.logger.log(
+          `PDF generated successfully (${pdfBuffer.length} bytes)`,
+        );
+        resolve(pdfBuffer);
+      });
 
-        // 21 CFR Part 11 Compliance
-        this.add21CFRSection(doc, data);
-
-        // Risk Assessment
-        this.addRiskAssessment(doc, data);
-
-        // Evidence Quality
-        this.addEvidenceQuality(doc, data);
-
-        // Audit Trail Summary
-        this.addAuditTrail(doc, data);
-
-        // Footer
-        this.addFooter(doc);
-
-        doc.end();
-      } catch (error) {
-        this.logger.error('PDF generation failed:', error);
+      // Handle errors
+      doc.on('error', (error) => {
+        this.logger.error('PDF generation failed', error);
         reject(error);
-      }
+      });
+
+      // Build PDF content
+      this.buildPdfContent(doc, report);
+
+      // Finalize PDF
+      doc.end();
     });
   }
 
-  private addHeader(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
-    doc.fontSize(20).text('ROSIE Compliance Report', { align: 'center' });
-    doc.fontSize(12).text(`Repository: ${data.repositoryName}`, { align: 'center' });
-    doc.fontSize(10).text(`Generated: ${data.generatedAt.toISOString()}`, { align: 'center' });
-    doc.moveDown(2);
+  /**
+   * Build PDF content structure
+   */
+  private buildPdfContent(doc: PDFKit.PDFDocument, report: ComplianceReport) {
+    // Header
+    this.addHeader(doc, report);
+
+    // Executive Summary
+    this.addExecutiveSummary(doc, report);
+
+    // 21 CFR Part 11 Compliance
+    this.addCfrCompliance(doc, report);
+
+    // Risk Assessment
+    this.addRiskAssessment(doc, report);
+
+    // Evidence Quality
+    this.addEvidenceQuality(doc, report);
+
+    // Audit Trail Summary
+    this.addAuditTrailSummary(doc, report);
+
+    // Footer
+    this.addFooter(doc, report);
   }
 
-  private addExecutiveSummary(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
-    doc.fontSize(16).text('Executive Summary', { underline: true });
-    doc.moveDown();
+  /**
+   * Add PDF header
+   */
+  private addHeader(doc: PDFKit.PDFDocument, report: ComplianceReport) {
+    doc
+      .fontSize(24)
+      .font('Helvetica-Bold')
+      .text('ROSIE Compliance Report', { align: 'center' });
 
-    doc.fontSize(12);
-    doc.text(`Compliance Score: ${data.complianceScore}/100`);
-    doc.text(`Overall Risk: ${data.overallRisk}`);
-    doc.moveDown();
+    doc.moveDown(0.5);
 
-    // Add summary metrics
-    if (data.sections.executiveSummary) {
-      const summary = data.sections.executiveSummary;
-      doc.fontSize(11);
-      doc.text(`Total Requirements: ${summary.totalRequirements || 0}`);
-      doc.text(`Total Specifications: ${summary.totalSpecs || 0}`);
-      doc.text(`Total Evidence: ${summary.totalEvidence || 0}`);
-      doc.text(`Verification Rate: ${summary.verificationRate || 0}%`);
+    doc
+      .fontSize(12)
+      .font('Helvetica')
+      .text(
+        `Generated: ${report.generatedAt.toISOString().split('T')[0]}`,
+        { align: 'center' },
+      );
+
+    if (report.generatedBy) {
+      doc.text(`By: ${report.generatedBy}`, { align: 'center' });
     }
 
     doc.moveDown(2);
   }
 
-  private add21CFRSection(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
-    doc.fontSize(16).text('21 CFR Part 11 Compliance', { underline: true });
-    doc.moveDown();
+  /**
+   * Add Executive Summary section
+   */
+  private addExecutiveSummary(
+    doc: PDFKit.PDFDocument,
+    report: ComplianceReport,
+  ) {
+    const summary = report.sections.executiveSummary;
+    if (!summary) return;
 
-    const cfr = data.sections.cfr21Part11 || {};
-    doc.fontSize(11);
+    this.addSectionTitle(doc, 'Executive Summary');
 
-    const sections = [
-      { code: '§11.10(e)', desc: 'Tamper-evident copies', status: cfr.section11_10e },
-      { code: '§11.10(c)', desc: 'Audit trails', status: cfr.section11_10c },
-      { code: '§11.50', desc: 'Non-repudiation', status: cfr.section11_50 },
-    ];
+    doc.fontSize(10).font('Helvetica');
 
-    sections.forEach((section) => {
-      const status = section.status ? '✓' : '✗';
-      doc.text(`${status} ${section.code}: ${section.desc}`);
-    });
+    // Project Info
+    doc.text(`Project: ${summary.projectName || 'N/A'}`, { continued: true });
+    doc.text(` | Version: ${summary.version || 'N/A'}`);
 
-    doc.moveDown(2);
+    doc.text(
+      `Validation Status: ${summary.validationStatus || 'N/A'}`,
+      { continued: true },
+    );
+    doc.text(` | Risk Rating: ${summary.gxpRiskRating || 'N/A'}`);
+
+    doc.moveDown(0.5);
+
+    // Compliance Score (large, prominent)
+    doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .text(`Compliance Score: ${report.complianceScore}%`, {
+        align: 'center',
+      });
+
+    doc.fontSize(10).font('Helvetica');
+    doc.moveDown(0.5);
+
+    // Artifact Counts
+    if (summary.artifactCounts) {
+      doc.font('Helvetica-Bold').text('Artifact Counts:');
+      doc.font('Helvetica');
+      doc.text(
+        `  • Requirements: ${summary.artifactCounts.requirements || 0}`,
+      );
+      doc.text(
+        `  • User Stories: ${summary.artifactCounts.userStories || 0}`,
+      );
+      doc.text(
+        `  • Specifications: ${summary.artifactCounts.specifications || 0}`,
+      );
+      doc.text(`  • Evidence: ${summary.artifactCounts.evidence || 0}`);
+    }
+
+    doc.moveDown(0.5);
+
+    // Verification and Risk
+    doc.text(
+      `Verification Rate: ${summary.verificationRate || 'N/A'} | Overall Risk: ${report.overallRisk}`,
+    );
+
+    if (summary.summary) {
+      doc.moveDown(0.5);
+      doc.font('Helvetica-Bold').text('Summary:');
+      doc.font('Helvetica').text(summary.summary, { width: 500 });
+    }
+
+    doc.moveDown(1.5);
   }
 
-  private addRiskAssessment(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
-    doc.fontSize(16).text('Risk Assessment', { underline: true });
-    doc.moveDown();
+  /**
+   * Add 21 CFR Part 11 Compliance section
+   */
+  private addCfrCompliance(doc: PDFKit.PDFDocument, report: ComplianceReport) {
+    const cfr = report.sections.cfrCompliance;
+    if (!cfr) return;
 
-    const risk = data.sections.riskAssessment || {};
-    doc.fontSize(11);
+    this.addSectionTitle(doc, '21 CFR Part 11 Compliance Assessment');
 
-    doc.text(`HIGH Risk Items: ${risk.highRiskCount || 0}`);
-    doc.text(`MEDIUM Risk Items: ${risk.mediumRiskCount || 0}`);
-    doc.text(`LOW Risk Items: ${risk.lowRiskCount || 0}`);
+    doc.fontSize(10).font('Helvetica');
 
-    doc.moveDown(2);
+    // Overall status
+    doc
+      .font('Helvetica-Bold')
+      .text(`Overall Status: ${cfr.overallStatus || 'N/A'}`);
+    doc.moveDown(0.5);
+
+    // Individual sections
+    if (cfr.sections && Array.isArray(cfr.sections)) {
+      cfr.sections.forEach((section: any, index: number) => {
+        if (index > 0) doc.moveDown(0.5);
+
+        doc.font('Helvetica-Bold').text(section.regulation || 'N/A');
+        doc
+          .font('Helvetica')
+          .text(`Status: ${section.status || 'N/A'}`, { indent: 10 });
+
+        if (section.notes) {
+          doc.text(`Notes: ${section.notes}`, { indent: 10 });
+        }
+      });
+    }
+
+    // Recommendations
+    if (cfr.recommendations && cfr.recommendations.length > 0) {
+      doc.moveDown(0.5);
+      doc.font('Helvetica-Bold').text('Recommendations:');
+      cfr.recommendations.forEach((rec: string) => {
+        doc.font('Helvetica').text(`  • ${rec}`);
+      });
+    }
+
+    doc.moveDown(1.5);
   }
 
-  private addEvidenceQuality(doc: PDFKit.PDFDocument, data: ComplianceReportData) {
-    doc.fontSize(16).text('Evidence Quality', { underline: true });
-    doc.moveDown();
+  /**
+   * Add Risk Assessment section
+   */
+  private addRiskAssessment(
+    doc: PDFKit.PDFDocument,
+    report: ComplianceReport,
+  ) {
+    const risk = report.sections.riskAssessment;
+    if (!risk) return;
 
-    const evidence = data.sections.evidenceQuality || {};
-    doc.fontSize(11);
+    this.addSectionTitle(doc, 'Risk Assessment');
 
-    doc.text(`IQ Evidence: ${evidence.iqCount || 0}`);
-    doc.text(`OQ Evidence: ${evidence.oqCount || 0}`);
-    doc.text(`PQ Evidence: ${evidence.pqCount || 0}`);
-    doc.text(`Valid Signatures: ${evidence.validSignatures || 0}/${evidence.totalEvidence || 0}`);
+    doc.fontSize(10).font('Helvetica');
 
-    doc.moveDown(2);
+    doc.text(`Overall Risk: ${risk.overallRisk || 'N/A'}`);
+    doc.text(`Risk Score: ${risk.riskScore || 0}/100`);
+
+    doc.moveDown(1.5);
   }
 
-  private addAuditTrail(doc: PDFKit.PDFDocument, _data: ComplianceReportData) {
-    doc.fontSize(16).text('Audit Trail Summary', { underline: true });
-    doc.moveDown();
+  /**
+   * Add Evidence Quality section
+   */
+  private addEvidenceQuality(
+    doc: PDFKit.PDFDocument,
+    report: ComplianceReport,
+  ) {
+    const evidence = report.sections.evidenceQuality;
+    if (!evidence) return;
 
-    doc.fontSize(11);
-    doc.text('Complete audit trail available in CSV export.');
-    doc.text('All operations logged with timestamps and user attribution.');
+    this.addSectionTitle(doc, 'Evidence Quality');
 
-    doc.moveDown(2);
+    doc.fontSize(10).font('Helvetica');
+
+    // Summary
+    if (evidence.summary) {
+      doc.text(
+        `Total Evidence: ${evidence.summary.totalEvidence || 0}`,
+      );
+      doc.text(
+        `Verified: ${evidence.summary.verifiedEvidence || 0}`,
+      );
+      doc.text(
+        `Verification Rate: ${evidence.summary.verificationRate || 'N/A'}`,
+      );
+    }
+
+    // By tier
+    if (evidence.byTier) {
+      doc.moveDown(0.5);
+      doc.font('Helvetica-Bold').text('Evidence by Tier:');
+      doc.font('Helvetica');
+
+      if (evidence.byTier.IQ) {
+        doc.text(
+          `  • IQ: ${evidence.byTier.IQ.count} (${evidence.byTier.IQ.verified} verified)`,
+        );
+      }
+      if (evidence.byTier.OQ) {
+        doc.text(
+          `  • OQ: ${evidence.byTier.OQ.count} (${evidence.byTier.OQ.verified} verified)`,
+        );
+      }
+      if (evidence.byTier.PQ) {
+        doc.text(
+          `  • PQ: ${evidence.byTier.PQ.count} (${evidence.byTier.PQ.verified} verified)`,
+        );
+      }
+    }
+
+    doc.moveDown(1.5);
   }
 
-  private addFooter(doc: PDFKit.PDFDocument) {
-    doc.fontSize(8).text(
-      'Generated by ROSIE Middleware - https://github.com/rosie-middleware',
-      50,
-      doc.page.height - 50,
-      { align: 'center', lineBreak: false }
+  /**
+   * Add Audit Trail Summary section
+   */
+  private addAuditTrailSummary(
+    doc: PDFKit.PDFDocument,
+    report: ComplianceReport,
+  ) {
+    const audit = report.sections.auditTrail;
+    if (!audit) return;
+
+    this.addSectionTitle(doc, 'Audit Trail Summary');
+
+    doc.fontSize(10).font('Helvetica');
+
+    doc.text(`Total Audit Records: ${audit.totalRecords || 0}`);
+
+    if (audit.summary) {
+      doc.text(audit.summary);
+    }
+
+    doc.moveDown(1.5);
+  }
+
+  /**
+   * Add section title with consistent styling
+   */
+  private addSectionTitle(doc: PDFKit.PDFDocument, title: string) {
+    // Check if we need a new page
+    if (doc.y > 650) {
+      doc.addPage();
+    }
+
+    doc.fontSize(14).font('Helvetica-Bold').text(title, { underline: true });
+    doc.moveDown(0.5);
+  }
+
+  /**
+   * Add footer with metadata
+   */
+  private addFooter(doc: PDFKit.PDFDocument, report: ComplianceReport) {
+    const range = doc.bufferedPageRange();
+    const pageCount = range.count;
+
+    // PDFKit uses 0-based page indexing, but range.start might not be 0
+    for (let i = range.start; i < range.start + pageCount; i++) {
+      doc.switchToPage(i);
+
+      const pageNumber = i - range.start + 1;
+      doc
+        .fontSize(8)
+        .font('Helvetica')
+        .text(
+          `Report ID: ${report.id} | Page ${pageNumber} of ${pageCount}`,
+          50,
+          doc.page.height - 50,
+          { align: 'center', lineBreak: false },
+        );
+    }
+  }
+
+  /**
+   * DEPRECATED: Legacy method for backward compatibility
+   * Use generateComplianceReportPdf instead
+   * @deprecated
+   */
+  async generateCompliancePdf(_data: any): Promise<any> {
+    this.logger.warn(
+      'generateCompliancePdf is deprecated. Use generateComplianceReportPdf instead.',
+    );
+    throw new Error(
+      'This method is deprecated. Please use generateComplianceReportPdf instead.',
     );
   }
 }

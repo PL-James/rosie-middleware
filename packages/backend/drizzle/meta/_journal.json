@@ -15,6 +15,20 @@
       "when": 1770192272780,
       "tag": "0001_workable_robin_chapel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770284937574,
+      "tag": "0002_yummy_pete_wisdom",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770285416196,
+      "tag": "0003_little_blue_blade",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Query, NotFoundException, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import {
   db,
   systemContexts,
@@ -11,11 +12,13 @@ import { eq, and, desc, count } from 'drizzle-orm';
 import { PaginationDto, createPaginatedResponse } from '@/common/pagination.dto';
 
 @Controller('api/v1/repositories/:id')
+@UseInterceptors(CacheInterceptor)
 export class ArtifactsController {
   /**
    * Get system context (apex document)
    */
   @Get('system-context')
+  @CacheTTL(600000) // Cache for 10 minutes
   async getSystemContext(@Param('id') repositoryId: string) {
     const [context] = await db
       .select()
@@ -35,6 +38,7 @@ export class ArtifactsController {
    * Get all requirements (with pagination)
    */
   @Get('requirements')
+  @CacheTTL(300000) // Cache for 5 minutes
   async getRequirements(
     @Param('id') repositoryId: string,
     @Query() pagination: PaginationDto,

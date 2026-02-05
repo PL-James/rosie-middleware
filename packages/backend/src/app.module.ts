@@ -14,6 +14,9 @@ import { ProductsModule } from './modules/products/products.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { QueueModule } from './queue/queue.module';
+import { AppCacheModule } from './cache/cache.module';
+import { WebSocketModule } from './websocket/websocket.module';
 
 @Module({
   imports: [
@@ -35,6 +38,9 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     HealthModule,
     AuthModule,
+    QueueModule,
+    AppCacheModule,
+    WebSocketModule,
     GitHubModule,
     ArtifactsModule,
     RepositoriesModule,

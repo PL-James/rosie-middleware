@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -16,6 +16,7 @@ import {
 // Enums
 export const scanStatusEnum = pgEnum('scan_status', [
   'pending',
+  'queued',
   'in_progress',
   'completed',
   'failed',
@@ -95,6 +96,32 @@ export const scans = pgTable(
     repositoryIdIdx: index('scan_repository_id_idx').on(table.repositoryId),
     statusIdx: index('scan_status_idx').on(table.status),
     createdAtIdx: index('scan_created_at_idx').on(table.createdAt),
+  }),
+);
+
+// File Checksums (for incremental scanning)
+export const fileChecksums = pgTable(
+  'file_checksums',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    repositoryId: uuid('repository_id')
+      .notNull()
+      .references(() => repositories.id, { onDelete: 'cascade' }),
+    filePath: text('file_path').notNull(),
+    sha256Hash: varchar('sha256_hash', { length: 64 }).notNull(),
+    lastScannedAt: timestamp('last_scanned_at').notNull().defaultNow(),
+    artifactId: uuid('artifact_id'), // Link to requirement/user_story/spec/evidence
+    artifactType: artifactTypeEnum('artifact_type'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    repositoryIdIdx: index('file_checksum_repository_id_idx').on(table.repositoryId),
+    filePathIdx: index('file_checksum_file_path_idx').on(table.repositoryId, table.filePath),
+    uniqueFilePath: uniqueIndex('file_checksum_unique_repo_path').on(
+      table.repositoryId,
+      table.filePath,
+    ),
   }),
 );
 
@@ -401,6 +428,13 @@ export const scansRelations = relations(scans, ({ one, many }) => ({
   evidence: many(evidence),
 }));
 
+export const fileChecksumsRelations = relations(fileChecksums, ({ one }) => ({
+  repository: one(repositories, {
+    fields: [fileChecksums.repositoryId],
+    references: [repositories.id],
+  }),
+}));
+
 export const requirementsRelations = relations(requirements, ({ one, many }) => ({
   repository: one(repositories, {
     fields: [requirements.repositoryId],
@@ -536,6 +570,23 @@ export const productRepositories = pgTable(
     ),
   }),
 );
+
+// API Keys
+export const apiKeys = pgTable('api_keys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  keyHash: text('key_hash').notNull().unique(),
+  userId: text('user_id').notNull(),
+  scopes: text('scopes')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  expiresAt: timestamp('expires_at'),
+  lastUsedAt: timestamp('last_used_at'),
+  isRevoked: boolean('is_revoked').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at'),
+});
 
 // Relations for new tables
 export const manufacturersRelations = relations(manufacturers, ({ many }) => ({

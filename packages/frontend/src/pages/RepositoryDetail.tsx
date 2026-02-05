@@ -234,6 +234,12 @@ export default function RepositoryDetail() {
               >
                 Compliance Report
               </Link>
+              <Link
+                to={`/repositories/${id}/audit-trail`}
+                className="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+              >
+                Audit Trail
+              </Link>
             </div>
           </div>
         </div>
