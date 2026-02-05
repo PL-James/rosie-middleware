@@ -9,14 +9,15 @@ import { WebSocketModule } from '@/websocket/websocket.module';
 export class QueueModule {
   static forRoot(): DynamicModule {
     // Check if Redis is configured via environment variable
+    const redisUrl = process.env.REDIS_URL;
     const redisHost = process.env.REDIS_HOST;
 
-    if (!redisHost) {
+    if (!redisUrl && !redisHost) {
       console.warn(
-        '⚠️  Redis not configured (REDIS_HOST not set) - BullMQ queue disabled. Scans will run synchronously.',
+        '⚠️  Redis not configured (REDIS_URL or REDIS_HOST not set) - BullMQ queue disabled. Scans will run synchronously.',
       );
       console.warn(
-        '   To enable async scanning with BullMQ, set REDIS_HOST environment variable.',
+        '   To enable async scanning with BullMQ, set REDIS_URL environment variable.',
       );
 
       // Return minimal module without BullMQ
@@ -30,7 +31,7 @@ export class QueueModule {
 
     // Redis is configured - enable BullMQ
     console.log(
-      `✅ Redis configured at ${redisHost} - BullMQ queue enabled for async scanning`,
+      `✅ Redis configured ${redisUrl ? 'via REDIS_URL' : `at ${redisHost}`} - BullMQ queue enabled for async scanning`,
     );
 
     return {
@@ -39,19 +40,40 @@ export class QueueModule {
         // Configure BullMQ with Redis connection
         BullModule.forRootAsync({
           imports: [ConfigModule],
-          useFactory: (configService: ConfigService) => ({
-            connection: {
-              host: configService.get('REDIS_HOST', 'localhost'),
-              port: configService.get('REDIS_PORT', 6379),
-              // Optional: Add password if Redis requires auth
-              password: configService.get('REDIS_PASSWORD'),
-              // Retry strategy for connection failures
-              retryStrategy: (times: number) => {
-                const delay = Math.min(times * 50, 2000);
-                return delay;
+          useFactory: (configService: ConfigService) => {
+            const url = configService.get('REDIS_URL');
+
+            // If REDIS_URL is provided, use it directly
+            if (url) {
+              // Parse redis://[:password@]host[:port][/db-number]
+              const redisUrlObj = new URL(url);
+              return {
+                connection: {
+                  host: redisUrlObj.hostname,
+                  port: parseInt(redisUrlObj.port || '6379', 10),
+                  password: redisUrlObj.password || undefined,
+                  db: redisUrlObj.pathname ? parseInt(redisUrlObj.pathname.slice(1), 10) : 0,
+                  retryStrategy: (times: number) => {
+                    const delay = Math.min(times * 50, 2000);
+                    return delay;
+                  },
+                },
+              };
+            }
+
+            // Fallback to individual REDIS_HOST/PORT/PASSWORD variables
+            return {
+              connection: {
+                host: configService.get('REDIS_HOST', 'localhost'),
+                port: configService.get('REDIS_PORT', 6379),
+                password: configService.get('REDIS_PASSWORD'),
+                retryStrategy: (times: number) => {
+                  const delay = Math.min(times * 50, 2000);
+                  return delay;
+                },
               },
-            },
-          }),
+            };
+          },
           inject: [ConfigService],
         }),
         // Register the scanner queue

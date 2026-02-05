@@ -10,16 +10,16 @@ import KeyvRedis from '@keyv/redis';
       isGlobal: true, // Make cache available globally
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        // Check if Redis is configured
+        // Check if Redis is configured (via REDIS_URL or individual variables)
+        const redisUrl = configService.get('REDIS_URL');
         const redisHost = configService.get('REDIS_HOST');
-        const redisPort = configService.get('REDIS_PORT');
-        const redisPassword = configService.get('REDIS_PASSWORD');
 
         // If Redis is not configured, use in-memory cache as fallback
-        if (!redisHost) {
+        if (!redisUrl && !redisHost) {
           console.warn(
-            'Redis not configured - using in-memory cache (not recommended for production)',
+            '⚠️  Redis not configured (REDIS_URL or REDIS_HOST not set) - using in-memory cache',
           );
+          console.warn('   For production, set REDIS_URL environment variable');
           return {
             ttl: 300000, // 5 minutes default in milliseconds
             max: 100, // Max 100 items in memory
@@ -27,15 +27,22 @@ import KeyvRedis from '@keyv/redis';
         }
 
         // Build Redis connection URL
-        const redisUrl = redisPassword
-          ? `redis://:${redisPassword}@${redisHost}:${redisPort || 6379}`
-          : `redis://${redisHost}:${redisPort || 6379}`;
-
-        console.log(`Connecting to Redis at ${redisHost}:${redisPort || 6379} for caching`);
+        let connectionUrl: string;
+        if (redisUrl) {
+          connectionUrl = redisUrl;
+          console.log(`✅ Connecting to Redis via REDIS_URL for caching`);
+        } else {
+          const redisPort = configService.get('REDIS_PORT', 6379);
+          const redisPassword = configService.get('REDIS_PASSWORD');
+          connectionUrl = redisPassword
+            ? `redis://:${redisPassword}@${redisHost}:${redisPort}`
+            : `redis://${redisHost}:${redisPort}`;
+          console.log(`✅ Connecting to Redis at ${redisHost}:${redisPort} for caching`);
+        }
 
         // Use Keyv with Redis store
         const keyv = new Keyv({
-          store: new KeyvRedis(redisUrl),
+          store: new KeyvRedis(connectionUrl),
           ttl: 300000, // 5 minutes default TTL in milliseconds
         });
 
