@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { SignJWT, importPKCS8 } from 'jose';
 import { glob } from 'glob';
 import path from 'path';
+import { computeSrcTreeHash } from './lib/system-state-hash';
 
 /**
  * Evidence Generation Script
@@ -38,6 +39,7 @@ interface EvidencePayload {
   gxp_id: string;
   spec_id: string;
   verification_tier: 'IQ' | 'OQ' | 'PQ';
+  traced_user_story?: string;
   test_results: {
     tool: string;
     version: string;
@@ -48,7 +50,8 @@ interface EvidencePayload {
     test_cases: TestResult[];
   };
   timestamp: string;
-  system_state: string;
+  system_state_hash: string;
+  git_commit: string;
 }
 
 async function main() {
@@ -86,10 +89,11 @@ async function main() {
   const privateKey = await loadPrivateKey();
   console.log('   Private key loaded\n');
 
-  // 5. Get git commit SHA
+  // 5. Compute system state hash (SHA-256 of /src tree) and git commit
+  const systemStateHash = computeSrcTreeHash('packages/backend/src');
   const gitSha = execSync('git rev-parse HEAD').toString().trim();
-  const gitShortSha = gitSha.substring(0, 7);
-  console.log(`📝 System state: git:${gitShortSha}\n`);
+  console.log(`📝 System state hash: ${systemStateHash.substring(0, 12)}...`);
+  console.log(`   Git commit: ${gitSha.substring(0, 7)}\n`);
 
   // 6. Get vitest version
   const vitestVersion = getVitestVersion();
@@ -101,7 +105,7 @@ async function main() {
 
   let evidenceCount = 0;
 
-  for (const [specId, { verification_tier, test_file }] of gxpMapping) {
+  for (const [specId, { verification_tier, test_file, traced_user_story }] of gxpMapping) {
     // Find test results for this spec
     const relevantTests = findTestsForSpec(testResults.testResults, specId, test_file);
 
@@ -121,6 +125,7 @@ async function main() {
       gxp_id: `EV-${specId}`,
       spec_id: specId,
       verification_tier: verification_tier,
+      ...(traced_user_story ? { traced_user_story } : {}),
       test_results: {
         tool: 'vitest',
         version: vitestVersion,
@@ -131,7 +136,8 @@ async function main() {
         test_cases: relevantTests,
       },
       timestamp: new Date().toISOString(),
-      system_state: `git:${gitSha}`,
+      system_state_hash: systemStateHash,
+      git_commit: gitSha,
     };
 
     // Sign with JWS
@@ -168,7 +174,7 @@ async function main() {
 /**
  * Extract GxP tags from test files
  */
-function extractGxpTags(): Map<string, { verification_tier: 'IQ' | 'OQ' | 'PQ'; test_file: string }> {
+function extractGxpTags(): Map<string, { verification_tier: 'IQ' | 'OQ' | 'PQ'; test_file: string; traced_user_story?: string }> {
   const mapping = new Map();
   const testFiles = glob.sync('packages/*/src/**/*.spec.ts', {
     ignore: ['**/node_modules/**'],
@@ -179,6 +185,10 @@ function extractGxpTags(): Map<string, { verification_tier: 'IQ' | 'OQ' | 'PQ'; 
 
     // Extract @gxp-tag comments
     const gxpTagMatches = content.matchAll(/@gxp-tag\s+([A-Z]+-\d+(?:-\d+)*)/g);
+
+    // Extract @trace annotations (US-IDs)
+    const traceMatches = [...content.matchAll(/@trace\s+(US-\d+(?:-\d+)*)/g)];
+    const firstTrace = traceMatches.length > 0 ? traceMatches[0][1] : undefined;
 
     for (const match of gxpTagMatches) {
       const specId = match[1];
@@ -198,10 +208,23 @@ function extractGxpTags(): Map<string, { verification_tier: 'IQ' | 'OQ' | 'PQ'; 
         tier = 'PQ';
       }
 
+      // Find the closest @trace annotation to this @gxp-tag
+      let tracedUserStory = firstTrace;
+      for (const traceMatch of traceMatches) {
+        const traceIndex = traceMatch.index!;
+        const gxpIndex = match.index!;
+        // Use the @trace that appears closest after the @gxp-tag (within same comment block)
+        if (traceIndex > gxpIndex && traceIndex - gxpIndex < 200) {
+          tracedUserStory = traceMatch[1];
+          break;
+        }
+      }
+
       if (!mapping.has(specId)) {
         mapping.set(specId, {
           verification_tier: tier,
           test_file: file,
+          traced_user_story: tracedUserStory,
         });
       }
     }

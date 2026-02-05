@@ -1,5 +1,6 @@
 /**
  * @gxp-tag SPEC-001-003
+ * @trace US-001-001
  * @gxp-criticality HIGH
  * @test-type integration
  *

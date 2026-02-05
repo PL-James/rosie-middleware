@@ -6,6 +6,7 @@ import { JwsVerificationService } from './jws-verification.service';
  * Evidence Service Unit Tests
  *
  * @gxp-tag REQ-EV-002
+ * @trace US-005-003
  * @gxp-criticality HIGH
  * @test-type unit
  *

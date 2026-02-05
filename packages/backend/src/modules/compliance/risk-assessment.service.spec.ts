@@ -5,6 +5,7 @@ import { RiskAssessmentService } from './risk-assessment.service';
  * Risk Assessment Service Unit Tests
  *
  * @gxp-tag REQ-RA-003
+ * @trace US-006-001
  * @gxp-criticality HIGH
  * @test-type unit
  *

@@ -7,6 +7,7 @@ const makeTestApiKey = (char: string = 'a'): string => `rsk_${char.repeat(64)}`;
 
 /**
  * @gxp-tag SPEC-006-002-001
+ * @trace US-006-001
  * @gxp-criticality HIGH
  * @test-type unit
  * @requirement REQ-006

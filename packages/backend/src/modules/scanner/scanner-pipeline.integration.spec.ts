@@ -22,6 +22,7 @@ import { TraceabilityValidatorService } from '../traceability/traceability-valid
  * Scanner Service Full Pipeline Integration Tests
  *
  * @gxp-tag SPEC-006-001-001
+ * @trace US-006-001
  * @gxp-criticality HIGH
  * @test-type integration
  * @requirement REQ-006

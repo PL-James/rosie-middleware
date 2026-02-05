@@ -7,6 +7,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
  * Database Migration Tests
  *
  * @gxp-tag REQ-DB-001
+ * @trace US-005-001
  * @gxp-criticality HIGH
  * @test-type integration
  *
