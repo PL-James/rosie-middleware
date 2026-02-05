@@ -29,6 +29,8 @@ interface EvidencePayload {
   };
   timestamp: string;
   system_state: string;
+  system_state_hash?: string;
+  git_commit?: string;
 }
 
 async function main() {
@@ -85,7 +87,13 @@ async function main() {
       console.log(`      Spec: ${evidence.spec_id}`);
       console.log(`      Tests: ${passed} passed, ${testsFailed} failed`);
       console.log(`      Timestamp: ${evidence.timestamp}`);
-      console.log(`      System: ${evidence.system_state}\n`);
+      if (evidence.system_state_hash) {
+        console.log(`      State hash: ${evidence.system_state_hash.substring(0, 12)}...`);
+        console.log(`      Git commit: ${evidence.git_commit || 'N/A'}`);
+      } else {
+        console.log(`      System: ${evidence.system_state}`);
+      }
+      console.log('');
 
       verified.push(file);
 
