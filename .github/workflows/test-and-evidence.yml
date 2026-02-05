@@ -51,7 +51,12 @@ jobs:
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: test
-        run: npm run test:ci
+        run: |
+          npm run test:ci
+          # Move test results to root for evidence generation
+          if [ -f packages/backend/test-results.json ]; then
+            mv packages/backend/test-results.json ./test-results.json
+          fi
 
       - name: Display test summary
         if: always()
