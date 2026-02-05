@@ -406,12 +406,24 @@ Test implementation.
       .returning();
 
     // Test systemContexts unique constraint (repository_id)
+    // First insert
+    await db.insert(systemContexts).values({
+      repositoryId: testRepoId,
+      scanId: scan.id,
+      projectName: 'Test 1',
+      version: '1.0.0',
+      gxpRiskRating: 'HIGH',
+      validationStatus: 'DRAFT',
+      sections: {},
+    });
+
+    // Second insert with onConflictDoUpdate - should update
     await db
       .insert(systemContexts)
       .values({
         repositoryId: testRepoId,
         scanId: scan.id,
-        projectName: 'Test 1',
+        projectName: 'Test 2',
         version: '1.0.0',
         gxpRiskRating: 'HIGH',
         validationStatus: 'DRAFT',
