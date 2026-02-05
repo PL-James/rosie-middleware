@@ -8,7 +8,8 @@ design_approach: |
   Persist → Notify. Track scan status and metrics.
 source_files:
   - packages/backend/src/modules/scanner/scanner.service.ts
-test_files: []
+test_files:
+  - packages/backend/src/modules/scanner/scanner-pipeline.integration.spec.ts
 validation_status: DRAFT
 ---
 
