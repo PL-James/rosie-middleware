@@ -263,16 +263,35 @@ export class ScannerService {
       if (onProgress) await onProgress(70, 'Persisting to database');
       const [scan] = await db.select().from(scans).where(eq(scans.id, scanId));
 
-      // Insert system context
+      // Insert or update system context (UPSERT)
       if (artifacts.systemContext) {
-        await db.insert(systemContexts).values({
-          repositoryId: scan.repositoryId,
-          scanId,
-          ...artifacts.systemContext,
-        });
+        await db
+          .insert(systemContexts)
+          .values({
+            repositoryId: scan.repositoryId,
+            scanId,
+            ...artifacts.systemContext,
+          })
+          .onConflictDoUpdate({
+            target: [systemContexts.repositoryId],
+            set: {
+              scanId,
+              projectName: sql`excluded.project_name`,
+              version: sql`excluded.version`,
+              gxpRiskRating: sql`excluded.gxp_risk_rating`,
+              description: sql`excluded.description`,
+              businessContext: sql`excluded.business_context`,
+              technicalContext: sql`excluded.technical_context`,
+              qualityAttributes: sql`excluded.quality_attributes`,
+              constraints: sql`excluded.constraints`,
+              assumptions: sql`excluded.assumptions`,
+              rawContent: sql`excluded.raw_content`,
+              updatedAt: new Date(),
+            },
+          });
       }
 
-      // Insert requirements
+      // Insert or update requirements (UPSERT)
       const requirementRecords = await db
         .insert(requirements)
         .values(
@@ -289,9 +308,23 @@ export class ScannerService {
             metadata: r.metadata,
           })),
         )
+        .onConflictDoUpdate({
+          target: [requirements.repositoryId, requirements.gxpId],
+          set: {
+            scanId,
+            title: sql`excluded.title`,
+            description: sql`excluded.description`,
+            gxpRiskRating: sql`excluded.gxp_risk_rating`,
+            acceptanceCriteria: sql`excluded.acceptance_criteria`,
+            filePath: sql`excluded.file_path`,
+            rawContent: sql`excluded.raw_content`,
+            metadata: sql`excluded.metadata`,
+            updatedAt: new Date(),
+          },
+        })
         .returning();
 
-      // Insert user stories
+      // Insert or update user stories (UPSERT)
       const userStoryRecords = await db
         .insert(userStories)
         .values(
@@ -312,9 +345,27 @@ export class ScannerService {
             metadata: us.metadata,
           })),
         )
+        .onConflictDoUpdate({
+          target: [userStories.repositoryId, userStories.gxpId],
+          set: {
+            scanId,
+            parentId: sql`excluded.parent_id`,
+            title: sql`excluded.title`,
+            description: sql`excluded.description`,
+            asA: sql`excluded.as_a`,
+            iWant: sql`excluded.i_want`,
+            soThat: sql`excluded.so_that`,
+            acceptanceCriteria: sql`excluded.acceptance_criteria`,
+            status: sql`excluded.status`,
+            filePath: sql`excluded.file_path`,
+            rawContent: sql`excluded.raw_content`,
+            metadata: sql`excluded.metadata`,
+            updatedAt: new Date(),
+          },
+        })
         .returning();
 
-      // Insert specs
+      // Insert or update specs (UPSERT)
       const specRecords = await db
         .insert(specs)
         .values(
@@ -335,27 +386,64 @@ export class ScannerService {
             metadata: s.metadata,
           })),
         )
+        .onConflictDoUpdate({
+          target: [specs.repositoryId, specs.gxpId],
+          set: {
+            scanId,
+            parentId: sql`excluded.parent_id`,
+            title: sql`excluded.title`,
+            description: sql`excluded.description`,
+            designApproach: sql`excluded.design_approach`,
+            implementationNotes: sql`excluded.implementation_notes`,
+            verificationTier: sql`excluded.verification_tier`,
+            sourceFiles: sql`excluded.source_files`,
+            testFiles: sql`excluded.test_files`,
+            filePath: sql`excluded.file_path`,
+            rawContent: sql`excluded.raw_content`,
+            metadata: sql`excluded.metadata`,
+            updatedAt: new Date(),
+          },
+        })
         .returning();
 
-      // Insert evidence
+      // Insert or update evidence (UPSERT)
       if (artifacts.evidence.length > 0) {
-        await db.insert(evidence).values(
-          artifacts.evidence.map((e) => ({
-            repositoryId: scan.repositoryId,
-            scanId,
-            gxpId: e.gxpId,
-            fileName: e.fileName,
-            filePath: e.filePath,
-            verificationTier: e.verificationTier,
-            jwsPayload: e.jwsPayload,
-            jwsHeader: e.jwsHeader,
-            signature: e.signature,
-            testResults: e.testResults,
-            systemState: e.systemState,
-            timestamp: e.timestamp,
-            rawContent: e.rawContent,
-          })),
-        );
+        await db
+          .insert(evidence)
+          .values(
+            artifacts.evidence.map((e) => ({
+              repositoryId: scan.repositoryId,
+              scanId,
+              gxpId: e.gxpId,
+              fileName: e.fileName,
+              filePath: e.filePath,
+              verificationTier: e.verificationTier,
+              jwsPayload: e.jwsPayload,
+              jwsHeader: e.jwsHeader,
+              signature: e.signature,
+              testResults: e.testResults,
+              systemState: e.systemState,
+              timestamp: e.timestamp,
+              rawContent: e.rawContent,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [evidence.repositoryId, evidence.gxpId],
+            set: {
+              scanId,
+              fileName: sql`excluded.file_name`,
+              filePath: sql`excluded.file_path`,
+              verificationTier: sql`excluded.verification_tier`,
+              jwsPayload: sql`excluded.jws_payload`,
+              jwsHeader: sql`excluded.jws_header`,
+              signature: sql`excluded.signature`,
+              testResults: sql`excluded.test_results`,
+              systemState: sql`excluded.system_state`,
+              timestamp: sql`excluded.timestamp`,
+              rawContent: sql`excluded.raw_content`,
+              updatedAt: new Date(),
+            },
+          });
       }
 
       // Phase 5.4: Update File Checksums
