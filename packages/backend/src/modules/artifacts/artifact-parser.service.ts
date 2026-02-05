@@ -164,14 +164,19 @@ export class ArtifactParserService {
 
     const parentId = data.parent_id || data.requirement || data.parentId;
 
+    // Extract user story components from markdown if not in frontmatter
+    const asAMatch = markdown.match(/\*\*As a\*\*\s+(.+?)(?:\n|$)/i);
+    const iWantMatch = markdown.match(/\*\*I want\*\*\s+(.+?)(?:\n|$)/i);
+    const soThatMatch = markdown.match(/\*\*So that\*\*\s+(.+?)(?:\n|$)/i);
+
     return {
       gxpId,
       parentId,
       title: data.title || markdown.split('\n')[0].replace(/^#\s+/, ''),
       description: data.description || markdown,
-      asA: data.as_a || data.asA,
-      iWant: data.i_want || data.iWant,
-      soThat: data.so_that || data.soThat,
+      asA: data.as_a || data.asA || (asAMatch ? asAMatch[1].trim() : undefined),
+      iWant: data.i_want || data.iWant || (iWantMatch ? iWantMatch[1].trim() : undefined),
+      soThat: data.so_that || data.soThat || (soThatMatch ? soThatMatch[1].trim() : undefined),
       acceptanceCriteria: data.acceptance_criteria || data.acceptanceCriteria,
       status: data.status,
       metadata: data,
