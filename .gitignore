@@ -36,6 +36,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
+!.gxp/risk_assessment.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
@@ -52,3 +53,5 @@ rosie-middleware-phase3/
 rosie-middleware-phase4/
 .rosie-keys/
 /test-results.json
+packages/frontend/test-results/
+packages/frontend/playwright-report/
