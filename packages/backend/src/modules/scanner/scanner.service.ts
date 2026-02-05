@@ -439,7 +439,6 @@ export class ScannerService {
               systemState: sql`excluded.system_state`,
               timestamp: sql`excluded.timestamp`,
               rawContent: sql`excluded.raw_content`,
-              updatedAt: new Date(),
             },
           });
       }

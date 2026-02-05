@@ -1,0 +1,147 @@
+name: Test & Generate Evidence
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-evidence:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: rosie_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        env:
+          TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
+        run: npm run db:migrate --workspace=backend
+
+      - name: Run all tests (including integration)
+        env:
+          TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: test
+        run: npm test -- --run --reporter=json --outputFile=test-results.json
+
+      - name: Display test summary
+        if: always()
+        run: |
+          if [ -f test-results.json ]; then
+            echo "📊 Test Results:"
+            cat test-results.json | jq '.numTotalTests, .numPassedTests, .numFailedTests'
+          fi
+
+      - name: Setup evidence signing keys
+        env:
+          EVIDENCE_PRIVATE_KEY: ${{ secrets.EVIDENCE_PRIVATE_KEY }}
+          EVIDENCE_PUBLIC_KEY: ${{ secrets.EVIDENCE_PUBLIC_KEY }}
+        run: |
+          mkdir -p .rosie-keys
+          if [ -n "$EVIDENCE_PRIVATE_KEY" ]; then
+            echo "$EVIDENCE_PRIVATE_KEY" > .rosie-keys/private-key.pem
+            echo "$EVIDENCE_PUBLIC_KEY" > .rosie-keys/public-key.pem
+          else
+            echo "⚠️  No signing keys in secrets, generating ephemeral keys..."
+            openssl ecparam -name prime256v1 -genkey -noout -out .rosie-keys/private-key.pem
+            openssl ec -in .rosie-keys/private-key.pem -pubout -out .rosie-keys/public-key.pem
+          fi
+
+      - name: Generate evidence artifacts
+        if: success()
+        run: npm run generate-evidence
+
+      - name: Verify evidence integrity
+        if: success()
+        run: npm run verify-evidence
+
+      - name: Upload evidence artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-artifacts
+          path: .gxp/evidence/
+          retention-days: 90
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.json
+          retention-days: 30
+
+      - name: Commit evidence (main branch only)
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          git config user.name "ROSIE Evidence Bot"
+          git config user.email "evidence-bot@rosie-middleware"
+          git add .gxp/evidence/
+
+          # Only commit if there are changes
+          if git diff-index --quiet HEAD --; then
+            echo "✅ No evidence changes to commit"
+          else
+            git commit -m "chore: update evidence artifacts [skip ci]"
+            git push
+            echo "✅ Evidence committed to main branch"
+          fi
+
+      - name: Comment PR with evidence summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const evidenceFiles = fs.readdirSync('.gxp/evidence')
+              .filter(f => f.endsWith('.jws'));
+
+            const comment = `## 🔬 Evidence Generation Summary
+
+            ✅ **${evidenceFiles.length} evidence artifacts generated**
+
+            Evidence files will be committed to \`main\` branch upon merge.
+
+            <details>
+            <summary>Evidence Files</summary>
+
+            ${evidenceFiles.map(f => `- \`${f}\``).join('\n')}
+
+            </details>
+
+            📥 Download artifacts from the workflow run to inspect evidence.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
