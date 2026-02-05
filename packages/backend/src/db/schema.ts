@@ -148,7 +148,7 @@ export const systemContexts = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
-    repositoryIdIdx: index('system_context_repository_id_idx').on(
+    repositoryIdIdx: uniqueIndex('system_context_repository_id_idx').on(
       table.repositoryId,
     ),
     versionIdx: index('system_context_version_idx').on(table.version),

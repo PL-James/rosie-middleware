@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS "system_context_repository_id_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "system_context_repository_id_idx" ON "system_contexts" USING btree ("repository_id");
