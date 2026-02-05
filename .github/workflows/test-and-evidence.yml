@@ -47,6 +47,7 @@ jobs:
 
       - name: Run all tests (including integration)
         env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: test
