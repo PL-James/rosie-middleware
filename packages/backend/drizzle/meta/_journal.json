@@ -50,6 +50,13 @@
       "when": 1770313646564,
       "tag": "0006_powerful_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770334214058,
+      "tag": "0007_moaning_winter_soldier",
+      "breakpoints": true
     }
   ]
 }

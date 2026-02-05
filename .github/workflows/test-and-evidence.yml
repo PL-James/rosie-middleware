@@ -43,6 +43,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browsers
+        working-directory: packages/frontend
+        run: npx playwright install chromium --with-deps
+
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
@@ -81,6 +85,18 @@ jobs:
             echo "⚠️  test-results.json not found"
           fi
 
+      - name: Run E2E tests (PQ)
+        if: success()
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
+        run: |
+          # Start backend in background
+          npm run backend:dev &
+          sleep 5
+          # Run Playwright tests
+          cd packages/frontend && npx playwright test --reporter=json 2>&1 | tee ../../e2e-results.json || true
+          cd ../..
+
       - name: Setup evidence signing keys
         env:
           EVIDENCE_PRIVATE_KEY: ${{ secrets.EVIDENCE_PRIVATE_KEY }}
@@ -109,7 +125,9 @@ jobs:
         if: always()
         with:
           name: evidence-artifacts
-          path: .gxp/evidence/
+          path: |
+            .gxp/evidence/
+            packages/frontend/test-results/
           retention-days: 90
 
       - name: Upload test results
@@ -144,17 +162,33 @@ jobs:
             const fs = require('fs');
             const evidenceFiles = fs.readdirSync('.gxp/evidence')
               .filter(f => f.endsWith('.jws'));
+            const packageDirs = fs.readdirSync('.gxp/evidence')
+              .filter(f => {
+                try { return fs.statSync(`.gxp/evidence/${f}`).isDirectory(); }
+                catch { return false; }
+              });
+            const iqCount = packageDirs.filter(d => d.startsWith('IQ-')).length;
+            const oqCount = packageDirs.filter(d => d.startsWith('OQ-')).length;
+            const pqCount = packageDirs.filter(d => d.startsWith('PQ-')).length;
 
             const comment = `## 🔬 Evidence Generation Summary
 
             ✅ **${evidenceFiles.length} evidence artifacts generated**
+            📦 **${packageDirs.length} evidence packages** (IQ: ${iqCount} | OQ: ${oqCount} | PQ: ${pqCount})
 
             Evidence files will be committed to \`main\` branch upon merge.
 
             <details>
-            <summary>Evidence Files</summary>
+            <summary>Evidence Files (JWS)</summary>
 
             ${evidenceFiles.map(f => `- \`${f}\``).join('\n')}
+
+            </details>
+
+            <details>
+            <summary>Evidence Packages</summary>
+
+            ${packageDirs.map(d => `- \`${d}/\``).join('\n')}
 
             </details>
 
