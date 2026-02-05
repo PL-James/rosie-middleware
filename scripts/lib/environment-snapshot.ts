@@ -23,6 +23,15 @@ export interface EnvironmentSnapshot {
 }
 
 /**
+ * Redact PII fields by hashing them.
+ * Preserves uniqueness for correlation while hiding actual values.
+ */
+function redactPii(value: string): string {
+  const { createHash } = require('crypto');
+  return `[redacted:${createHash('sha256').update(value).digest('hex').substring(0, 8)}]`;
+}
+
+/**
  * Captures current environment details for evidence packages.
  * Sensitive env vars (keys, tokens, passwords) are redacted.
  */
@@ -33,9 +42,9 @@ export function captureEnvironment(): EnvironmentSnapshot {
     platform: process.platform,
     arch: process.arch,
     os_release: os.release(),
-    hostname: os.hostname(),
-    username: os.userInfo().username,
-    cwd: process.cwd(),
+    hostname: redactPii(os.hostname()),
+    username: redactPii(os.userInfo().username),
+    cwd: redactPii(process.cwd()),
     env_vars: filterEnvVars(process.env),
     timestamp: new Date().toISOString(),
   };

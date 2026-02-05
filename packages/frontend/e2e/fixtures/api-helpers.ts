@@ -17,11 +17,18 @@ export async function seedRepository(request: APIRequestContext, data?: Partial<
     data: payload,
   });
 
+  if (!response.ok()) {
+    throw new Error(`Failed to seed repository: ${response.status()} ${response.statusText()}`);
+  }
+
   return response.json();
 }
 
 export async function deleteAllRepositories(request: APIRequestContext) {
   const response = await request.get(`${API_BASE}/api/v1/repositories`);
+  if (!response.ok()) {
+    throw new Error(`Failed to list repositories: ${response.status()} ${response.statusText()}`);
+  }
   const repos = await response.json();
 
   for (const repo of repos) {
@@ -31,5 +38,8 @@ export async function deleteAllRepositories(request: APIRequestContext) {
 
 export async function triggerScan(request: APIRequestContext, repoId: string) {
   const response = await request.post(`${API_BASE}/api/v1/repositories/${repoId}/scan`);
+  if (!response.ok()) {
+    throw new Error(`Failed to trigger scan: ${response.status()} ${response.statusText()}`);
+  }
   return response.json();
 }

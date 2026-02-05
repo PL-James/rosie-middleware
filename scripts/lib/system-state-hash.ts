@@ -19,7 +19,9 @@ export function computeSrcTreeHash(srcDir: string): string {
     const absPath = path.join(srcDir, relPath);
     const content = readFileSync(absPath);
     // Include the relative path in the hash to detect renames
+    // Null byte delimiter prevents path/content boundary ambiguity
     hash.update(relPath);
+    hash.update('\0');
     hash.update(content);
   }
 

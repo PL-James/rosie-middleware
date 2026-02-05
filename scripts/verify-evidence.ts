@@ -233,8 +233,11 @@ async function main() {
 
   for (const specId of specIds) {
     const hasJws = evidenceFiles.includes(`EV-${specId}.jws`);
+    // Use regex with word boundary to prevent false-positive matches
+    // (e.g., SPEC-001 should not match SPEC-001-001)
+    const specPattern = new RegExp(`-(${specId.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')})-`);
     const hasPackage = existsSync(packagesDir) && readdirSync(packagesDir).some(
-      d => d.includes(specId) && statSync(path.join(packagesDir, d)).isDirectory()
+      d => specPattern.test(`-${d}-`) && statSync(path.join(packagesDir, d)).isDirectory()
     );
 
     if (hasJws || hasPackage) {

@@ -13,17 +13,14 @@ import { test, expect } from './fixtures/test-setup';
  * @description PQ — QA Team: compliance report generation and export
  */
 test.describe('Compliance Reporting', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
-
   test('should load the application without errors', async ({ page }) => {
-    // Verify no console errors on page load
+    // Register listener before navigation to capture all console errors
     const errors: string[] = [];
     page.on('console', msg => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
 
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.screenshot({ path: 'test-results/screenshots/compliance-page-load.png' });
 
@@ -33,6 +30,7 @@ test.describe('Compliance Reporting', () => {
   });
 
   test('should display compliance-related navigation', async ({ page }) => {
+    await page.goto('/');
     // Check for compliance or reporting navigation elements
     const nav = page.locator('nav, [role="navigation"], aside');
     await page.screenshot({ path: 'test-results/screenshots/compliance-nav.png' });
@@ -42,6 +40,7 @@ test.describe('Compliance Reporting', () => {
   });
 
   test('should render data tables correctly', async ({ page }) => {
+    await page.goto('/');
     // Check for table elements that display compliance data
     await page.waitForLoadState('networkidle');
 

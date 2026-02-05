@@ -92,9 +92,16 @@ jobs:
         run: |
           # Start backend in background
           npm run backend:dev &
-          sleep 5
+          # Wait for backend to be ready (up to 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Backend ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
           # Run Playwright tests
-          cd packages/frontend && npx playwright test --reporter=json 2>&1 | tee ../../e2e-results.json || true
+          cd packages/frontend && npx playwright test --reporter=json 2>&1 | tee ../../e2e-results.json
           cd ../..
 
       - name: Setup evidence signing keys

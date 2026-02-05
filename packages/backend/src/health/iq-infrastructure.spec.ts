@@ -90,8 +90,9 @@ describe('IQ - Installation Qualification', () => {
       const tsPath = path.join(ROOT, 'node_modules/typescript/package.json');
       expect(existsSync(tsPath)).toBe(true);
       const tsPkg = JSON.parse(readFileSync(tsPath, 'utf-8'));
-      const majorMinor = tsPkg.version.split('.').slice(0, 2).map(Number);
-      expect(majorMinor[0]).toBeGreaterThanOrEqual(5);
+      const [major, minor] = tsPkg.version.split('.').slice(0, 2).map(Number);
+      // Require >= 5.6: either major > 5, or major === 5 and minor >= 6
+      expect(major > 5 || (major === 5 && minor >= 6)).toBe(true);
     });
   });
 

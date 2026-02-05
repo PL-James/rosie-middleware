@@ -255,22 +255,19 @@ export async function validatePackage(
     return { valid: false, errors: ['manifest.jws missing'] };
   }
 
-  // 2. Verify JWS signature
+  // 2. Verify JWS signature and use signed payload as source of truth
   const jwsToken = readFileSync(manifestJwsPath, 'utf-8');
-  let manifestFromJws: Manifest;
+  let manifest: Manifest;
 
   try {
     const publicKey = await importSPKI(publicKeyPem, 'ES256');
     const { payload } = await jwtVerify(jwsToken, publicKey);
-    manifestFromJws = payload as unknown as Manifest;
+    manifest = payload as unknown as Manifest;
   } catch (err: any) {
     return { valid: false, errors: [`Invalid JWS signature: ${err.message}`] };
   }
 
-  // 3. Load manifest.json for comparison
-  const manifest: Manifest = JSON.parse(readFileSync(manifestJsonPath, 'utf-8'));
-
-  // 4. Check each file in the manifest exists and has correct hash
+  // 3. Check each file in the signed manifest exists and has correct hash
   const manifestPaths = new Set(manifest.files.map(f => f.path));
 
   for (const entry of manifest.files) {

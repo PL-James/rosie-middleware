@@ -7,6 +7,7 @@ import { test as base, expect } from '@playwright/test';
 export const test = base.extend<{
   apiBaseUrl: string;
 }>({
+  // eslint-disable-next-line no-empty-pattern
   apiBaseUrl: async ({}, use) => {
     await use(process.env.API_BASE_URL || 'http://localhost:3000');
   },

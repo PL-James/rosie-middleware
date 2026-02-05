@@ -219,7 +219,9 @@ export function extractGxpTags(
 }
 
 /**
- * Find test results that match a spec by test file basename.
+ * Find test results that match a spec by test file path suffix.
+ * Uses the full relative path suffix to avoid collisions between
+ * files with the same basename in different directories.
  */
 export function findTestsForSpec(
   testResults: TestFileResult[],
@@ -227,11 +229,13 @@ export function findTestsForSpec(
   testFile: string
 ): TestResult[] {
   const results: TestResult[] = [];
-  const baseName = path.basename(testFile, '.spec.ts');
+  // Normalize separators and use the full relative path for matching
+  const normalizedTestFile = testFile.replace(/\\/g, '/');
 
   for (const fileResult of testResults) {
-    // Match by file path basename
-    if (!fileResult.name.includes(baseName)) {
+    // Match by full path suffix to avoid cross-spec collisions
+    const normalizedName = fileResult.name.replace(/\\/g, '/');
+    if (!normalizedName.endsWith(normalizedTestFile) && !normalizedName.includes(normalizedTestFile)) {
       continue;
     }
 
