@@ -38,7 +38,7 @@ import { WebSocketModule } from './websocket/websocket.module';
     }),
     HealthModule,
     AuthModule,
-    QueueModule,
+    QueueModule.forRoot(), // Conditionally enables BullMQ if Redis is configured
     AppCacheModule,
     WebSocketModule,
     GitHubModule,
