@@ -47,7 +47,7 @@ export default function RepositoryDetail() {
     enabled: !!id && repository?.isRosieCompliant,
   });
 
-  const { data: requirements } = useQuery({
+  const { data: requirementsResponse } = useQuery({
     queryKey: ['requirements', id],
     queryFn: async () => {
       const response = await artifactsApi.getRequirements(id!);
@@ -56,7 +56,7 @@ export default function RepositoryDetail() {
     enabled: !!id && repository?.isRosieCompliant,
   });
 
-  const { data: userStories } = useQuery({
+  const { data: userStoriesResponse } = useQuery({
     queryKey: ['userStories', id],
     queryFn: async () => {
       const response = await artifactsApi.getUserStories(id!);
@@ -65,7 +65,7 @@ export default function RepositoryDetail() {
     enabled: !!id && repository?.isRosieCompliant,
   });
 
-  const { data: specs } = useQuery({
+  const { data: specsResponse } = useQuery({
     queryKey: ['specs', id],
     queryFn: async () => {
       const response = await artifactsApi.getSpecs(id!);
@@ -74,7 +74,7 @@ export default function RepositoryDetail() {
     enabled: !!id && repository?.isRosieCompliant,
   });
 
-  const { data: evidence } = useQuery({
+  const { data: evidenceResponse } = useQuery({
     queryKey: ['evidence', id],
     queryFn: async () => {
       const response = await artifactsApi.getEvidence(id!);
@@ -82,6 +82,12 @@ export default function RepositoryDetail() {
     },
     enabled: !!id && repository?.isRosieCompliant,
   });
+
+  // Extract data from paginated responses
+  const requirements = requirementsResponse?.data || [];
+  const userStories = userStoriesResponse?.data || [];
+  const specs = specsResponse?.data || [];
+  const evidence = evidenceResponse?.data || [];
 
   const { data: scansResponse } = useQuery({
     queryKey: ['scans', id, scansPage, scansLimit],

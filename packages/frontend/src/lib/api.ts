@@ -258,17 +258,17 @@ export const artifactsApi = {
   getSystemContext: (repositoryId: string) =>
     api.get<SystemContext>(`/repositories/${repositoryId}/system-context`),
   getRequirements: (repositoryId: string) =>
-    api.get<Requirement[]>(`/repositories/${repositoryId}/requirements`),
+    api.get<PaginatedResponse<Requirement>>(`/repositories/${repositoryId}/requirements`),
   getUserStories: (repositoryId: string, parentId?: string) =>
-    api.get<UserStory[]>(`/repositories/${repositoryId}/user-stories`, {
+    api.get<PaginatedResponse<UserStory>>(`/repositories/${repositoryId}/user-stories`, {
       params: { parent_id: parentId },
     }),
   getSpecs: (repositoryId: string, parentId?: string, tier?: string) =>
-    api.get<Spec[]>(`/repositories/${repositoryId}/specs`, {
+    api.get<PaginatedResponse<Spec>>(`/repositories/${repositoryId}/specs`, {
       params: { parent_id: parentId, tier },
     }),
   getEvidence: (repositoryId: string, tier?: string) =>
-    api.get<Evidence[]>(`/repositories/${repositoryId}/evidence`, {
+    api.get<PaginatedResponse<Evidence>>(`/repositories/${repositoryId}/evidence`, {
       params: { tier },
     }),
   getEvidenceById: (repositoryId: string, evidenceId: string) =>
