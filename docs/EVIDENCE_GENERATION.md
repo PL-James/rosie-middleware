@@ -1,441 +1,240 @@
-# Evidence Generation for ROSIE Compliance
+# ROSIE Evidence Generation Pipeline
 
-This document explains how to generate and verify JWS-signed evidence artifacts for ROSIE RFC-001 compliance.
-
----
+**Status:** ✅ Fully Operational (as of 2026-02-05)
 
 ## Overview
 
-**What is Evidence?**
+The ROSIE Middleware now has a fully automated evidence generation pipeline that produces cryptographically signed evidence artifacts for GxP compliance validation. Every push to `main` triggers automated test execution and evidence generation.
 
-Evidence artifacts are cryptographically signed JSON files that prove:
-1. Tests were executed at a specific git commit
-2. Test results (passed/failed counts)
-3. When the tests ran (timestamp)
-4. What tool ran them (vitest version)
+## Pipeline Components
 
-**Why JWS Signatures?**
+### 1. Automated Testing
+- **Platform:** GitHub Actions with PostgreSQL 16 service container
+- **Test Runner:** Vitest 2.1.9
+- **Test Types:** Unit, Integration, End-to-End
+- **Coverage:** 136 tests across 16 test files
 
-JSON Web Signatures (JWS) provide:
-- ✅ **Tamper-proof verification** - Any modification invalidates the signature
-- ✅ **Authenticity** - Proves evidence was created by authorized party
-- ✅ **Regulatory compliance** - Meets FDA 21 CFR Part 11 requirements
+### 2. Evidence Generation
+- **Script:** `scripts/generate-evidence.ts`
+- **Input:** Test results from vitest JSON reporter
+- **Output:** JWS-signed evidence artifacts (`.gxp/evidence/*.jws`)
+- **Signing Algorithm:** ES256 (ECDSA P-256)
+- **Key Format:** PKCS#8
 
----
+### 3. Evidence Verification
+- **Script:** `scripts/verify-evidence.ts`
+- **Validation:** JWS signature verification, spec coverage analysis
+- **Output:** Verification report with pass/fail status
 
-## Quick Start
+## Evidence Artifact Structure
 
-### 1. Generate Signing Keys (One-Time Setup)
+Each evidence file (`.jws`) contains:
 
-**For local development:**
-
-```bash
-# Create keys directory
-mkdir -p .rosie-keys
-
-# Generate EC private key (P-256 curve)
-openssl ecparam -name prime256v1 -genkey -noout -out .rosie-keys/private-key.pem
-
-# Extract public key
-openssl ec -in .rosie-keys/private-key.pem -pubout -out .rosie-keys/public-key.pem
-
-# Secure the private key
-chmod 600 .rosie-keys/private-key.pem
-
-# Add to .gitignore (already configured)
-echo ".rosie-keys/" >> .gitignore
-```
-
-**Important:** Never commit private keys to git!
-
-### 2. Run Tests
-
-```bash
-# Set up test database (one-time)
-createdb rosie_test
-TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm run db:migrate
-
-# Run tests with JSON reporter
-TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm run test:ci
-```
-
-This creates `test-results.json` with test execution details.
-
-### 3. Generate Evidence
-
-```bash
-npm run generate-evidence
-```
-
-**Output:**
-```
-🔬 ROSIE Evidence Generator
-============================
-
-📊 Loading test results...
-   Found 16 test files
-   Total tests: 143
-   Passed: 143
-   Failed: 0
-
-🏷️  Extracting GxP tags from test files...
-   Found 18 specs with tests
-
-🔐 Loading signing keys...
-   Private key loaded
-
-📝 System state: git:b99d0f7
-
-🔧 Test tool: vitest 2.1.0
-
-📝 Generating evidence artifacts...
-   ✅ SPEC-006-001-001: 5/5 tests passed
-   ✅ SPEC-002-001: 15/15 tests passed
-   ✅ SPEC-004-002: 10/10 tests passed
-   ...
-
-✅ Evidence generation complete!
-📁 18 evidence files created in .gxp/evidence/
-```
-
-### 4. Verify Evidence
-
-```bash
-npm run verify-evidence
-```
-
-**Output:**
-```
-🔍 ROSIE Evidence Verifier
-===========================
-
-🔐 Loading public key...
-   Public key loaded
-
-📁 Found 18 evidence files
-
-🔬 Verifying evidence signatures...
-
-   ✅ EV-SPEC-006-001-001.jws
-      Spec: SPEC-006-001-001
-      Tests: 5 passed, 0 failed
-      Timestamp: 2026-02-05T18:30:45.123Z
-      System: git:b99d0f7abc123...
-
-   ✅ EV-SPEC-002-001.jws
-      ...
-
-📊 Verification Summary:
-   Evidence files: 18
-   Verified: 18
-   Failed: 0
-   Spec coverage: 18/18 (100%)
-
-✅ All evidence verified successfully
-```
-
----
-
-## CI/CD Setup (GitHub Actions)
-
-### 1. Add Signing Keys to GitHub Secrets
-
-```bash
-# Display private key (copy the output)
-cat .rosie-keys/private-key.pem
-
-# Go to GitHub: Settings → Secrets and variables → Actions → New repository secret
-# Name: EVIDENCE_PRIVATE_KEY
-# Value: (paste private key, including -----BEGIN/END----- lines)
-
-# Display public key (copy the output)
-cat .rosie-keys/public-key.pem
-
-# Add another secret:
-# Name: EVIDENCE_PUBLIC_KEY
-# Value: (paste public key)
-```
-
-### 2. CI Workflow Automatically Runs
-
-The `.github/workflows/test-and-evidence.yml` workflow:
-
-**On Every PR:**
-- ✅ Runs all tests (including integration tests with PostgreSQL)
-- ✅ Generates evidence artifacts
-- ✅ Verifies evidence signatures
-- ✅ Uploads evidence as downloadable artifact
-- ❌ Does NOT commit evidence (PR branch)
-
-**On Merge to Main:**
-- ✅ Runs all tests
-- ✅ Generates evidence artifacts
-- ✅ Verifies evidence signatures
-- ✅ **Commits evidence to main branch**
-- ✅ Evidence always stays synchronized with code
-
----
-
-## Evidence File Format
-
-### Structure
-
-```
-.gxp/evidence/EV-SPEC-006-001-001.jws
-```
-
-**Contents (JWS compact format):**
-```
-eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InJvc2llLW1pZGRsZXdhcmUtMjAyNi0wMi0wNSJ9.eyJAY29udGV4dCI6Imh0dHBzOi8vd3d3LnJvc2llLXN0YW5kYXJkLm9yZy9ldmlkZW5jZS92MSIsImd4cF9pZCI6IkVWLVNQRUMtMDA2LTAwMS0wMDEiLCJzcGVjX2lkIjoiU1BFQy0wMDYtMDAxLTAwMSIsInZlcmlmaWNhdGlvbl90aWVyIjoiT1EiLCJ0ZXN0X3Jlc3VsdHMiOnsidG9vbCI6InZpdGVzdCIsInZlcnNpb24iOiIyLjEuMCIsInBhc3NlZCI6NSwiZmFpbGVkIjowLCJza2lwcGVkIjowLCJkdXJhdGlvbl9tcyI6MTIzNCwidGVzdF9jYXNlcyI6W119LCJ0aW1lc3RhbXAiOiIyMDI2LTAyLTA1VDE4OjMwOjQ1LjEyM1oiLCJzeXN0ZW1fc3RhdGUiOiJnaXQ6Yjk5ZDBmN2FiYzEyMyJ9.MEUCIQDXxY1Z2...
-```
-
-**Decoded payload:**
 ```json
 {
   "@context": "https://www.rosie-standard.org/evidence/v1",
-  "gxp_id": "EV-SPEC-006-001-001",
-  "spec_id": "SPEC-006-001-001",
-  "verification_tier": "OQ",
+  "gxp_id": "EV-SPEC-XXX-YYY",
+  "spec_id": "SPEC-XXX-YYY",
+  "verification_tier": "IQ|OQ|PQ",
   "test_results": {
     "tool": "vitest",
-    "version": "2.1.0",
-    "passed": 5,
+    "version": "2.1.9",
+    "passed": 10,
     "failed": 0,
     "skipped": 0,
     "duration_ms": 1234,
-    "test_cases": [
-      {
-        "name": "should execute complete scan pipeline and persist all artifacts",
-        "status": "passed",
-        "duration": 234,
-        "ancestorTitles": ["ScannerService - Full Pipeline Integration"]
-      }
-    ]
+    "test_cases": [...]
   },
-  "timestamp": "2026-02-05T18:30:45.123Z",
-  "system_state": "git:b99d0f7abc123..."
+  "timestamp": "2026-02-05T21:47:19.580Z",
+  "system_state": "git:ebc5cc48ff703e732190738922f450683e694174"
 }
 ```
 
-### Verification
-
-Anyone can verify evidence with the public key:
-
-```typescript
-import { jwtVerify, importSPKI } from 'jose';
-
-const jws = readFileSync('.gxp/evidence/EV-SPEC-006-001-001.jws', 'utf-8');
-const publicKeyPem = readFileSync('.rosie-keys/public-key.pem', 'utf-8');
-const publicKey = await importSPKI(publicKeyPem, 'ES256');
-
-const { payload } = await jwtVerify(jws, publicKey);
-console.log('Evidence verified:', payload);
-// ✅ Signature valid, evidence is authentic
+Signed with JWS header:
+```json
+{
+  "alg": "ES256",
+  "typ": "JWT",
+  "kid": "rosie-middleware-2026-02-05"
+}
 ```
 
----
+## Current Coverage
 
-## How Scanner Ingests Evidence
+- **Total Specs:** 15
+- **Specs with Tests:** 58 (many specs have multiple sub-specifications)
+- **Evidence Files Generated:** 58
+- **Verification Success Rate:** 100% (58/58)
 
-When you run a scan, the scanner:
+## GitHub Actions Workflow
 
-1. **Discovers** `.gxp/evidence/*.jws` files
-2. **Parses** JWS (verifies signature, extracts payload)
-3. **Persists** to database:
+**File:** `.github/workflows/test-and-evidence.yml`
 
-```sql
-INSERT INTO evidence (
-  repository_id,
-  scan_id,
-  spec_id,
-  gxp_id,
-  file_name,
-  file_path,
-  verification_tier,
-  jws_payload,
-  jws_header,
-  signature,
-  test_results,
-  system_state,
-  timestamp
-) VALUES (...);
-```
+**Triggers:**
+- Push to `main` branch
+- Pull requests to `main` branch
 
-4. **Links** evidence to specs via `spec_id`
+**Steps:**
+1. Setup Node.js and PostgreSQL
+2. Install dependencies
+3. Run database migrations
+4. Execute all tests (unit + integration)
+5. Generate evidence artifacts
+6. Verify evidence integrity
+7. Upload artifacts (90-day retention)
+8. Commit evidence to `main` (on successful push only)
+9. Comment PR summary (on pull requests)
 
-Evidence is now queryable via API:
-```
-GET /api/repositories/{id}/evidence
-GET /api/evidence/{id}
-```
+## Signing Keys
 
----
+**Location:** `.rosie-keys/`
+- `private-key.pem` - ES256 private key (PKCS#8 format)
+- `public-key.pem` - ES256 public key
 
-## Troubleshooting
+**CI/CD:**
+- Private key stored in GitHub Secrets: `EVIDENCE_PRIVATE_KEY`
+- Public key stored in GitHub Secrets: `EVIDENCE_PUBLIC_KEY`
+- Ephemeral keys generated if secrets not configured
 
-### "No private key found"
-
-**Error:**
-```
-❌ No private key found in .rosie-keys/private-key.pem
-```
-
-**Solution:**
+**Local Development:**
 ```bash
-# Generate signing keys (see step 1)
-mkdir -p .rosie-keys
-openssl ecparam -name prime256v1 -genkey -noout -out .rosie-keys/private-key.pem
-openssl ec -in .rosie-keys/private-key.pem -pubout -out .rosie-keys/public-key.pem
+# Generate new signing keys (if needed)
+openssl ecparam -name prime256v1 -genkey -noout | \
+  openssl pkcs8 -topk8 -nocrypt -out .rosie-keys/private-key.pem
+openssl ec -in .rosie-keys/private-key.pem -pubout \
+  -out .rosie-keys/public-key.pem
 ```
 
-### "test-results.json not found"
+## Running Locally
 
-**Error:**
-```
-❌ test-results.json not found
-```
-
-**Solution:**
+### Generate Evidence
 ```bash
 # Run tests with JSON reporter
 npm run test:ci
-```
 
-### "Evidence verification failed"
-
-**Error:**
-```
-❌ EV-SPEC-006-001-001.jws
-   Error: signature verification failed
-```
-
-**Causes:**
-- Evidence file was manually edited (tampering)
-- Wrong public key used for verification
-- Evidence generated with different private key
-
-**Solution:**
-- Regenerate evidence: `npm run generate-evidence`
-- Ensure public/private key pair match
-
-### "Integration tests skipped"
-
-**Issue:**
-Integration tests show as skipped in test output.
-
-**Cause:**
-`TEST_DATABASE_URL` not set.
-
-**Solution:**
-```bash
-# Set up test database
-createdb rosie_test
-
-# Run tests with TEST_DATABASE_URL
-TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
-```
-
----
-
-## Best Practices
-
-### 1. Key Management
-
-**✅ DO:**
-- Store private key in `.rosie-keys/` (git-ignored)
-- Add private key to CI secrets (GitHub Actions)
-- Keep public key in repo or documentation
-- Use separate keys for dev/staging/production
-
-**❌ DON'T:**
-- Commit private keys to git
-- Share private keys via email/Slack
-- Reuse keys across projects
-- Store keys in environment variables (use files or secrets manager)
-
-### 2. Evidence Lifecycle
-
-**Development:**
-```bash
-# After implementing new feature with tests
-npm run test:ci
+# Generate evidence artifacts
 npm run generate-evidence
-git add .gxp/evidence/
-git commit -m "feat: add feature X with evidence"
 ```
 
-**CI/CD:**
-- Let CI auto-generate evidence on merge to main
-- Review evidence artifacts in PR (downloadable)
-- Verify evidence before merge: `npm run verify-evidence`
-
-**Production:**
-- Evidence files live in git (immutable history)
-- Scanner ingests on every scan
-- Evidence links to specs in database
-
-### 3. Audit Trail
-
-Every evidence file has:
-- ✅ Git commit SHA (reproducible)
-- ✅ Timestamp (when tests ran)
-- ✅ JWS signature (tamper-proof)
-- ✅ Test results (what passed/failed)
-
-**Auditors can verify:**
+### Verify Evidence
 ```bash
-# 1. Checkout specific commit
-git checkout b99d0f7abc123
-
-# 2. Verify evidence signature
 npm run verify-evidence
-
-# 3. Re-run tests (should produce same results)
-npm run test:ci
-
-# 4. Compare test results
-diff test-results.json .gxp/evidence/EV-*.jws
 ```
 
----
+### Manual Test Execution
+```bash
+# Backend tests only
+npm test --workspace=backend
 
-## FAQ
+# Integration tests (requires PostgreSQL)
+TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test \
+  npm test --workspace=backend
+```
 
-### Q: Do I need to generate evidence locally?
+## GxP Tag Requirements
 
-**A:** No, CI auto-generates evidence on merge to main. Local generation is optional for testing.
+All tests that contribute to evidence must have GxP tags:
 
-### Q: What happens if tests fail?
+```typescript
+/**
+ * @gxp-tag SPEC-XXX-YYY
+ * @gxp-criticality HIGH|MEDIUM|LOW
+ * @test-type unit|integration|e2e
+ * @requirement REQ-XXX (optional)
+ * @description Brief test description
+ */
+it('should validate requirement', () => {
+  // Test implementation
+});
+```
 
-**A:** Evidence is still generated, but `failed` count will be > 0. CI will fail and evidence won't be committed.
+## Verification Tiers
 
-### Q: Can I edit evidence files?
+- **IQ (Installation Qualification):** System setup and configuration
+- **OQ (Operational Qualification):** System functionality and features
+- **PQ (Performance Qualification):** System performance and scalability
 
-**A:** No! JWS signatures prevent tampering. Any edit invalidates the signature.
+## Troubleshooting
 
-### Q: How long are evidence files valid?
+### Evidence Generation Fails
 
-**A:** 10 years (set in JWS expiration). Evidence is immutable once committed.
+**Symptom:** No `.jws` files created
 
-### Q: What if I lose the private key?
+**Common Causes:**
+1. Test results file not found → Check `test-results.json` exists
+2. No GxP tags found → Verify `@gxp-tag` comments in test files
+3. Signing keys missing → Check `.rosie-keys/` directory
 
-**A:** Generate a new key pair, regenerate all evidence. Old evidence remains valid (verified with old public key).
+**Solution:**
+```bash
+# Verify test results structure
+cat test-results.json | jq '.testResults[0] | keys'
 
-### Q: Do evidence files slow down git?
+# Check for GxP tags
+grep -r "@gxp-tag" packages/backend/src --include="*.spec.ts"
 
-**A:** No, they're small text files (~2-5KB each). 18 files = ~100KB total.
+# Verify signing keys
+ls -la .rosie-keys/
+```
 
----
+### Verification Fails
 
-## Related Documentation
+**Symptom:** `npm run verify-evidence` reports failed signatures
 
-- **ROSIE RFC-001:** https://www.rosie-standard.org/rfc/001
-- **JWS (RFC 7515):** https://datatracker.ietf.org/doc/html/rfc7515
-- **FDA 21 CFR Part 11:** Electronic records and signatures
-- **GitHub Actions Secrets:** https://docs.github.com/en/actions/security-guides/encrypted-secrets
+**Common Causes:**
+1. Evidence signed with different key → Re-generate with correct key
+2. Evidence file corrupted → Re-generate evidence
+3. Public key mismatch → Verify `.rosie-keys/public-key.pem`
 
----
+**Solution:**
+```bash
+# Re-generate evidence with current keys
+npm run generate-evidence
 
-**Generated:** 2026-02-05
-**Version:** 1.0.0
-**Status:** Production Ready
+# Verify public key format
+openssl ec -pubin -in .rosie-keys/public-key.pem -text
+```
+
+### CI Workflow Fails
+
+**Check:**
+1. GitHub Actions logs: `gh run list --workflow=test-and-evidence.yml`
+2. Database connection: Verify PostgreSQL service container started
+3. Test failures: Check test output in workflow logs
+4. Permissions: Verify workflow has `contents: write` permission
+
+## Compliance Artifacts
+
+All evidence artifacts are:
+- ✅ Cryptographically signed (non-repudiation)
+- ✅ Timestamped (temporal validation)
+- ✅ Linked to system state (git SHA)
+- ✅ Version controlled (committed to repository)
+- ✅ Archived (90-day retention in GitHub Artifacts)
+
+## Future Enhancements
+
+- [ ] Evidence archival to long-term storage (S3/R2)
+- [ ] PDF compliance report generation
+- [ ] Evidence dashboard (view all evidence in web UI)
+- [ ] Automated spec coverage tracking
+- [ ] Evidence chain-of-custody logging
+
+## References
+
+- ROSIE RFC-001: Evidence Artifact Specification
+- ROSIE Standard: https://www.rosie-standard.org/evidence/v1
+- JWS Specification: RFC 7515
+- ES256 Algorithm: RFC 7518 Section 3.4
+
+## Maintenance
+
+**Quarterly:**
+- Review evidence coverage (target: 100% of specs)
+- Rotate signing keys (recommended but not required)
+- Archive evidence artifacts to long-term storage
+
+**Per Release:**
+- Generate full evidence report
+- Verify all critical specs have evidence
+- Update compliance documentation
