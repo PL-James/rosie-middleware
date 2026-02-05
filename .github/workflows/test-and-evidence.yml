@@ -63,7 +63,19 @@ jobs:
         run: |
           if [ -f test-results.json ]; then
             echo "📊 Test Results:"
-            cat test-results.json | jq '.numTotalTests, .numPassedTests, .numFailedTests'
+            cat test-results.json | jq -r '
+              "Total: \(.numTotalTests)",
+              "Passed: \(.numPassedTests)",
+              "Failed: \(.numFailedTests)",
+              (if .numFailedTests > 0 then
+                "\nFailing tests:",
+                (.testResults[] | select(.testResults != null) |
+                  .testResults[] | select(.status == "failed") |
+                  "  ❌ \(.title)")
+              else empty end)
+            '
+          else
+            echo "⚠️  test-results.json not found"
           fi
 
       - name: Setup evidence signing keys
