@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ApiKeyService } from './api-key.service';
 import { db } from '@/db';
 
+// Helper to generate test API keys at runtime (avoids secret scanner false positives)
+const makeTestApiKey = (char: string = 'a'): string => `rsk_${char.repeat(64)}`;
+
 /**
  * @gxp-tag SPEC-006-002-001
  * @gxp-criticality HIGH
@@ -159,7 +162,7 @@ describe('ApiKeyService - API Key Management', () => {
    */
   describe('API Key Validation', () => {
     it('should validate correct API key and return user info', async () => {
-      const apiKey = 'rsk_test1234567890abcdef';
+      const apiKey = makeTestApiKey('t');
       const mockKey = {
         id: 'key-id-123',
         keyHash: 'computed-hash',
@@ -198,7 +201,7 @@ describe('ApiKeyService - API Key Management', () => {
      * @requirement REQ-006
      */
     it('should reject revoked API key', async () => {
-      const apiKey = 'rsk_revoked1234567890';
+      const apiKey = makeTestApiKey('r');
       const mockKey = {
         id: 'key-id-123',
         isRevoked: true,
@@ -223,7 +226,7 @@ describe('ApiKeyService - API Key Management', () => {
      * @requirement REQ-006
      */
     it('should reject expired API key', async () => {
-      const apiKey = 'rsk_expired1234567890';
+      const apiKey = makeTestApiKey('e');
       const mockKey = {
         id: 'key-id-123',
         isRevoked: false,
@@ -250,7 +253,7 @@ describe('ApiKeyService - API Key Management', () => {
      * @requirement REQ-006
      */
     it('should reject invalid/unknown API key', async () => {
-      const apiKey = 'rsk_unknown1234567890';
+      const apiKey = makeTestApiKey('u');
 
       vi.spyOn(db, 'select' as any).mockReturnValue({
         from: vi.fn().mockReturnValue({
@@ -270,7 +273,7 @@ describe('ApiKeyService - API Key Management', () => {
      * @requirement REQ-006
      */
     it('should update lastUsedAt timestamp on successful validation', async () => {
-      const apiKey = 'rsk_valid1234567890';
+      const apiKey = makeTestApiKey('v');
       const mockKey = {
         id: 'key-id-123',
         keyHash: 'computed-hash',
@@ -307,16 +310,18 @@ describe('ApiKeyService - API Key Management', () => {
    */
   describe('API Key Revocation', () => {
     it('should revoke API key by ID', async () => {
-      const mockUpdate = vi.fn().mockResolvedValue(true);
+      const mockReturning = vi.fn().mockResolvedValue([{ id: 'key-id-123' }]);
       vi.spyOn(db, 'update' as any).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: mockUpdate,
+          where: vi.fn().mockReturnValue({
+            returning: mockReturning,
+          }),
         }),
       });
 
       await service.revokeApiKey('key-id-123', 'user-123');
 
-      expect(mockUpdate).toHaveBeenCalled();
+      expect(mockReturning).toHaveBeenCalled();
     });
 
     /**
@@ -332,7 +337,9 @@ describe('ApiKeyService - API Key Management', () => {
         set: vi.fn().mockImplementation((values) => {
           capturedSetValues = values;
           return {
-            where: vi.fn().mockResolvedValue(true),
+            where: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 'key-id-123' }]),
+            }),
           };
         }),
       });

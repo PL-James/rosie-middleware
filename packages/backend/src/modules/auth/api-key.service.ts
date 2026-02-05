@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomBytes, createHash } from 'crypto';
 import { db } from '@/db';
 import { apiKeys } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 /**
  * API Key Service
@@ -123,13 +123,25 @@ export class ApiKeyService {
   async revokeApiKey(keyId: string, userId: string): Promise<void> {
     this.logger.log(`Revoking API key ${keyId} for user ${userId}`);
 
-    await db
+    const result = await db
       .update(apiKeys)
       .set({
         isRevoked: true,
         revokedAt: new Date(),
       })
-      .where(eq(apiKeys.id, keyId));
+      .where(
+        and(
+          eq(apiKeys.id, keyId),
+          eq(apiKeys.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (result.length === 0) {
+      throw new NotFoundException(
+        `API key ${keyId} not found or not owned by user ${userId}`,
+      );
+    }
 
     this.logger.log(`API key ${keyId} revoked successfully`);
   }

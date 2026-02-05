@@ -9,8 +9,12 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotImplementedException,
 } from '@nestjs/common';
 import { ApiKeyService } from './api-key.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { RolesGuard } from './roles.guard';
+import { Roles } from './roles.decorator';
 
 /**
  * API Key Controller
@@ -19,6 +23,7 @@ import { ApiKeyService } from './api-key.service';
  * Requires admin role to generate/revoke API keys.
  */
 @Controller('api/v1/api-keys')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ApiKeyController {
   constructor(private readonly apiKeyService: ApiKeyService) {}
 
@@ -29,6 +34,7 @@ export class ApiKeyController {
    * Body: { name, scopes, expiresInDays? }
    */
   @Post()
+  @Roles('admin')
   @HttpCode(HttpStatus.CREATED)
   async createApiKey(
     @Request() req: any,
@@ -39,7 +45,7 @@ export class ApiKeyController {
       expiresInDays?: number;
     },
   ) {
-    const userId = req.user?.id || 'system';
+    const userId = req.user.id;
 
     const result = await this.apiKeyService.generateApiKey(
       userId,
@@ -63,12 +69,11 @@ export class ApiKeyController {
    * Returns list of API keys (without the actual key values)
    */
   @Get()
-  async listApiKeys(@Request() req: any) {
-    // This would require a new service method to list keys by user
-    // For now, return a placeholder
-    return {
-      message: 'List API keys endpoint - to be implemented',
-    };
+  @Roles('admin')
+  async listApiKeys() {
+    throw new NotImplementedException(
+      'List API keys endpoint is not implemented yet',
+    );
   }
 
   /**
@@ -77,9 +82,10 @@ export class ApiKeyController {
    * DELETE /api/v1/api-keys/:id
    */
   @Delete(':id')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async revokeApiKey(@Param('id') keyId: string, @Request() req: any) {
-    const userId = req.user?.id || 'system';
+    const userId = req.user.id;
 
     await this.apiKeyService.revokeApiKey(keyId, userId);
 

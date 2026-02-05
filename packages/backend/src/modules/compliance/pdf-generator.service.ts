@@ -28,6 +28,7 @@ export class PdfGeneratorService {
       const doc = new PDFDocument({
         size: 'A4',
         margin: 50,
+        bufferPages: true,
         info: {
           Title: 'ROSIE Compliance Report',
           Author: report.generatedBy || 'ROSIE Middleware',
