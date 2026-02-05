@@ -116,7 +116,7 @@ export class ArtifactParserService {
       validationStatus:
         data.validation_status || data.validationStatus || 'DRAFT',
       intendedUse: data.intended_use || data.intendedUse || sections['Intended Use'],
-      regulatory: sections['Regulatory'] || sections['Regulatory Context'],
+      regulatory: data.regulatory || sections['Regulatory'] || sections['Regulatory Context'],
       systemOwner: data.system_owner || data.systemOwner,
       technicalContact: data.technical_contact || data.technicalContact,
       sections,
