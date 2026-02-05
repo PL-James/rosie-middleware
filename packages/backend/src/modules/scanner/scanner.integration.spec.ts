@@ -17,11 +17,14 @@ import { scans, repositories } from '@/db/schema';
 const TEST_DB_URL = process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/rosie_test';
 
 /**
- * Integration tests are skipped in CI because they require a live PostgreSQL database
- * with migrations applied. CI environment does not have TEST_DATABASE_URL configured.
- * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
+ * Integration tests require a live PostgreSQL database with migrations applied.
+ *
+ * Locally: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
+ * CI: TEST_DATABASE_URL is set by GitHub Actions (PostgreSQL service)
+ *
+ * Tests will skip if TEST_DATABASE_URL is not configured.
  */
-const describeIntegration = process.env.CI ? describe.skip : describe;
+const describeIntegration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 
 describeIntegration('ScannerService - Pagination Integration', () => {
   let testClient: ReturnType<typeof postgres>;

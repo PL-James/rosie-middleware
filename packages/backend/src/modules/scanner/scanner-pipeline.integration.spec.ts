@@ -34,9 +34,13 @@ const TEST_DB_URL = process.env.TEST_DATABASE_URL || 'postgresql://localhost:543
 
 /**
  * Integration tests require a live PostgreSQL database.
- * Run locally with: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
+ *
+ * Locally: TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test npm test
+ * CI: TEST_DATABASE_URL is set by GitHub Actions (PostgreSQL service)
+ *
+ * Tests will skip if TEST_DATABASE_URL is not configured.
  */
-const describeIntegration = process.env.CI ? describe.skip : describe;
+const describeIntegration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 
 describeIntegration('ScannerService - Full Pipeline Integration', () => {
   let testClient: ReturnType<typeof postgres>;
