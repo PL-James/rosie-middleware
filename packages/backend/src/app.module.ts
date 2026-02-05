@@ -17,6 +17,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { QueueModule } from './queue/queue.module';
 import { AppCacheModule } from './cache/cache.module';
 import { WebSocketModule } from './websocket/websocket.module';
+import { SpaController } from './spa.controller';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { WebSocketModule } from './websocket/websocket.module';
     // Serve frontend static files
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../..', 'frontend', 'dist'),
-      exclude: ['/api*'], // Don't serve static files for API routes
+      exclude: ['/api*'],
       serveRoot: '/',
     }),
     HealthModule,
@@ -51,5 +52,6 @@ import { WebSocketModule } from './websocket/websocket.module';
     ManufacturersModule,
     ProductsModule,
   ],
+  controllers: [SpaController], // Catch-all route for SPA - must be last
 })
 export class AppModule {}
