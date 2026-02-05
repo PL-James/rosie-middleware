@@ -445,13 +445,23 @@ Test implementation.
     expect(systemContextRecords[0].projectName).toBe('Test 2'); // Updated
 
     // Test requirements unique constraint (repository_id, gxp_id)
+    // First insert
+    await db.insert(requirements).values({
+      repositoryId: testRepoId,
+      scanId: scan.id,
+      gxpId: 'REQ-TEST',
+      title: 'First Title',
+      filePath: 'test.md',
+    });
+
+    // Second insert with onConflictDoUpdate - should update
     await db
       .insert(requirements)
       .values({
         repositoryId: testRepoId,
         scanId: scan.id,
         gxpId: 'REQ-TEST',
-        title: 'First Title',
+        title: 'Updated Title',
         filePath: 'test.md',
       })
       .onConflictDoUpdate({
