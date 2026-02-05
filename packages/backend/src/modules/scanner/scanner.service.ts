@@ -279,14 +279,12 @@ export class ScannerService {
               projectName: sql`excluded.project_name`,
               version: sql`excluded.version`,
               gxpRiskRating: sql`excluded.gxp_risk_rating`,
-              description: sql`excluded.description`,
-              businessContext: sql`excluded.business_context`,
-              technicalContext: sql`excluded.technical_context`,
-              qualityAttributes: sql`excluded.quality_attributes`,
-              constraints: sql`excluded.constraints`,
-              assumptions: sql`excluded.assumptions`,
-              rawContent: sql`excluded.raw_content`,
-              updatedAt: new Date(),
+              validationStatus: sql`excluded.validation_status`,
+              intendedUse: sql`excluded.intended_use`,
+              regulatory: sql`excluded.regulatory`,
+              systemOwner: sql`excluded.system_owner`,
+              technicalContact: sql`excluded.technical_contact`,
+              sections: sql`excluded.sections`,
             },
           });
       }
@@ -441,7 +439,6 @@ export class ScannerService {
               systemState: sql`excluded.system_state`,
               timestamp: sql`excluded.timestamp`,
               rawContent: sql`excluded.raw_content`,
-              updatedAt: new Date(),
             },
           });
       }
