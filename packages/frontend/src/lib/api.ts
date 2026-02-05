@@ -130,21 +130,69 @@ export interface VerificationStatus {
 }
 
 export interface ComplianceReport {
+  id: string;
   repositoryId: string;
-  summary: {
-    totalArtifacts: number;
-    complianceScore: number;
-    riskLevel: string;
-  };
-  cfr21Part11: {
-    electronicSignatures: { status: string; count: number };
-    auditTrail: { status: string; count: number };
-    systemValidation: { status: string };
-  };
-  evidenceQuality: {
-    total: number;
-    verified: number;
-    byTier: Record<string, number>;
+  reportType: string;
+  generatedAt: string;
+  complianceScore: number;
+  overallRisk: string;
+  sections: {
+    executiveSummary: {
+      projectName: string;
+      version: string;
+      validationStatus: string;
+      gxpRiskRating: string;
+      artifactCounts: {
+        requirements: number;
+        userStories: number;
+        specifications: number;
+        evidence: number;
+      };
+      verificationRate: string;
+      overallRisk: string;
+      riskScore: number;
+      summary: string;
+    };
+    cfrCompliance: {
+      title: string;
+      sections: Array<{
+        regulation: string;
+        status: string;
+        evidence: string[];
+        notes: string;
+      }>;
+      overallStatus: string;
+      recommendations: string[];
+    };
+    riskAssessment: RiskAssessment & {
+      riskLevel: string;
+      breakdown: Record<string, number>;
+      factors: Array<{
+        factor: string;
+        weight: number;
+        score: number;
+        rationale: string;
+      }>;
+      recommendations: string[];
+      assessedAt: string;
+    };
+    evidenceQuality: {
+      summary: {
+        totalEvidence: number;
+        verifiedEvidence: number;
+        verificationRate: string;
+      };
+      byTier: Record<string, { count: number; verified: number; description: string }>;
+      qualityMetrics: {
+        signatureValidity: string;
+        completeness: string;
+      };
+    };
+    auditTrail: {
+      totalRecords: number;
+      recentActions: any[];
+      summary: string;
+    };
   };
 }
 

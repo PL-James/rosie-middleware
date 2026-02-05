@@ -18,6 +18,7 @@ import {
   artifactsApi,
 } from '@/lib/api';
 import { formatDate, getStatusColor, getRiskColor, cn, formatDuration } from '@/lib/utils';
+import Markdown from '../components/Markdown';
 
 export default function RepositoryDetail() {
   const { id } = useParams<{ id: string }>();
@@ -211,10 +212,16 @@ export default function RepositoryDetail() {
                 Phase 3 & 4 Features
               </h3>
               <p className="text-xs text-blue-700">
-                Access evidence verification and compliance reports
+                Access evidence verification, compliance reports, and traceability analysis
               </p>
             </div>
             <div className="flex gap-2">
+              <Link
+                to={`/repositories/${id}/traceability`}
+                className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+              >
+                Traceability Matrix
+              </Link>
               <Link
                 to={`/repositories/${id}/evidence`}
                 className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
@@ -498,13 +505,13 @@ export default function RepositoryDetail() {
                             </span>
                           )}
                         </div>
-                        <h4 className="font-medium text-gray-900 mb-1">
+                        <h4 className="font-medium text-gray-900 mb-2">
                           {req.title}
                         </h4>
                         {req.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {req.description}
-                          </p>
+                          <div className="text-sm text-gray-600">
+                            <Markdown content={req.description} />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -530,13 +537,13 @@ export default function RepositoryDetail() {
                             </code>
                           )}
                         </div>
-                        <h4 className="font-medium text-gray-900 mb-1">
+                        <h4 className="font-medium text-gray-900 mb-2">
                           {us.title}
                         </h4>
                         {us.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {us.description}
-                          </p>
+                          <div className="text-sm text-gray-600">
+                            <Markdown content={us.description} />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -569,13 +576,13 @@ export default function RepositoryDetail() {
                             )}
                           </div>
                         </div>
-                        <h4 className="font-medium text-gray-900 mb-1">
+                        <h4 className="font-medium text-gray-900 mb-2">
                           {spec.title}
                         </h4>
                         {spec.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {spec.description}
-                          </p>
+                          <div className="text-sm text-gray-600">
+                            <Markdown content={spec.description} />
+                          </div>
                         )}
                       </div>
                     ))}

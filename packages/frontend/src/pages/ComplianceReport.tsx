@@ -192,7 +192,7 @@ export default function ComplianceReport() {
                 Total Artifacts
               </h3>
               <p className="mt-2 text-3xl font-semibold text-gray-900">
-                {report.summary.totalArtifacts}
+                {Object.values(report.sections.executiveSummary.artifactCounts).reduce((a, b) => a + b, 0)}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
@@ -200,21 +200,21 @@ export default function ComplianceReport() {
                 Compliance Score
               </h3>
               <p className="mt-2 text-3xl font-semibold text-green-600">
-                {report.summary.complianceScore}%
+                {report.complianceScore}%
               </p>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500">Risk Level</h3>
               <p
                 className={`mt-2 text-3xl font-semibold ${
-                  report.summary.riskLevel === 'HIGH'
+                  report.overallRisk === 'HIGH'
                     ? 'text-red-600'
-                    : report.summary.riskLevel === 'MEDIUM'
+                    : report.overallRisk === 'MEDIUM'
                     ? 'text-yellow-600'
                     : 'text-green-600'
                 }`}
               >
-                {report.summary.riskLevel}
+                {report.overallRisk}
               </p>
             </div>
           </div>
@@ -222,56 +222,41 @@ export default function ComplianceReport() {
           {/* 21 CFR Part 11 Checklist */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">
-              21 CFR Part 11 Compliance
+              {report.sections.cfrCompliance.title}
             </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Electronic Signatures</span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded ${
-                      report.cfr21Part11.electronicSignatures.status === 'compliant'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {report.cfr21Part11.electronicSignatures.status}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ({report.cfr21Part11.electronicSignatures.count} signatures)
-                  </span>
+            <div className="space-y-4">
+              {report.sections.cfrCompliance.sections.map((section, idx) => (
+                <div key={idx} className="border-b border-gray-200 pb-3 last:border-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-900">{section.regulation}</span>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded ${
+                        section.status === 'COMPLIANT'
+                          ? 'bg-green-100 text-green-800'
+                          : section.status === 'PARTIAL'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {section.status}
+                    </span>
+                  </div>
+                  {section.notes && (
+                    <p className="text-xs text-gray-600 mt-1">{section.notes}</p>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Audit Trail</span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded ${
-                      report.cfr21Part11.auditTrail.status === 'compliant'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {report.cfr21Part11.auditTrail.status}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ({report.cfr21Part11.auditTrail.count} entries)
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">System Validation</span>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded ${
-                    report.cfr21Part11.systemValidation.status === 'validated'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {report.cfr21Part11.systemValidation.status}
-                </span>
-              </div>
+              ))}
             </div>
+            {report.sections.cfrCompliance.recommendations.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Recommendations</h4>
+                <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                  {report.sections.cfrCompliance.recommendations.map((rec, idx) => (
+                    <li key={idx}>{rec}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}

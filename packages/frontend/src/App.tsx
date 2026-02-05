@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import RepositoryDetail from './pages/RepositoryDetail';
 import Evidence from './pages/Evidence';
 import ComplianceReport from './pages/ComplianceReport';
+import TraceabilityMatrix from './pages/TraceabilityMatrix';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Layout from './components/Layout';
@@ -18,6 +19,7 @@ function App() {
           {/* Phase 3: Evidence & Compliance */}
           <Route path="/repositories/:id/evidence" element={<Evidence />} />
           <Route path="/repositories/:id/compliance" element={<ComplianceReport />} />
+          <Route path="/repositories/:id/traceability" element={<TraceabilityMatrix />} />
 
           {/* Phase 4: Products */}
           <Route path="/products" element={<Products />} />
