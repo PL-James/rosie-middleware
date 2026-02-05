@@ -78,7 +78,7 @@ export class ScannerController {
     try {
       // Run scan in background (don't await)
       this.scannerService
-        .executeScan(scan.id, repository.owner, repository.repo)
+        .executeScanWithProgress(scan.id, repository.owner, repository.repo)
         .then(() => {
           this.logger.log(`Scan ${scan.id} completed successfully`);
         })
