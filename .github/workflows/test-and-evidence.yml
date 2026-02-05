@@ -51,7 +51,7 @@ jobs:
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: test
-        run: npm test -- --run --reporter=json --outputFile=test-results.json
+        run: npm run test:ci
 
       - name: Display test summary
         if: always()
