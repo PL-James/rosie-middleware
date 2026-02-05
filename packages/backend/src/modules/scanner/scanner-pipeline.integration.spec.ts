@@ -206,6 +206,19 @@ Test implementation.
     testRepoId = repo.id;
   });
 
+  beforeEach(async () => {
+    // Clean up test data between tests (except repository)
+    if (testRepoId) {
+      await db.delete(scans).where(eq(scans.repositoryId, testRepoId));
+      await db.delete(systemContexts).where(eq(systemContexts.repositoryId, testRepoId));
+      await db.delete(requirements).where(eq(requirements.repositoryId, testRepoId));
+      await db.delete(userStories).where(eq(userStories.repositoryId, testRepoId));
+      await db.delete(specs).where(eq(specs.repositoryId, testRepoId));
+      await db.delete(evidence).where(eq(evidence.repositoryId, testRepoId));
+      await db.delete(fileChecksums).where(eq(fileChecksums.repositoryId, testRepoId));
+    }
+  });
+
   afterAll(async () => {
     // Cleanup - cascade delete will handle related records
     if (testRepoId) {
