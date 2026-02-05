@@ -51,3 +51,4 @@ rosie-middleware-frontend/
 rosie-middleware-phase3/
 rosie-middleware-phase4/
 .rosie-keys/
+/test-results.json
