@@ -42,7 +42,7 @@ jobs:
 
       - name: Run database migrations
         env:
-          TEST_DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
+          DATABASE_URL: postgresql://user:password@localhost:5432/rosie_test
         run: npm run db:migrate --workspace=backend
 
       - name: Run all tests (including integration)
