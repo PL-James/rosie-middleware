@@ -29,7 +29,7 @@ import { AuthModule } from './modules/auth/auth.module';
     ]),
     // Serve frontend static files
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '../../..', 'frontend', 'dist'),
+      rootPath: join(__dirname, '../..', 'frontend', 'dist'),
       exclude: ['/api*'],
       serveRoot: '/',
     }),
