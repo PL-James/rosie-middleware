@@ -382,11 +382,25 @@ import { scanProgressClient } from '@/lib/websocket';
 export default function RepositoryDetail() {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
+  const [activeScanId, setActiveScanId] = useState<string | null>(null);
+
+  // Cleanup WebSocket subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      if (activeScanId) {
+        scanProgressClient.unsubscribe(activeScanId);
+        scanProgressClient.disconnect();
+      }
+    };
+  }, [activeScanId]);
 
   const handleTriggerScan = async () => {
     // Trigger scan via API
     const response = await repositoriesApi.triggerScan(id);
     const scanId = response.data.scanId;
+
+    // Track active scan for cleanup
+    setActiveScanId(scanId);
 
     // Connect to WebSocket
     scanProgressClient.connect();
