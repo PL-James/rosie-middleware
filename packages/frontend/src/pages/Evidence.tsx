@@ -19,7 +19,7 @@ export default function Evidence() {
       try {
         setLoading(true);
         const response = await artifactsApi.getEvidence(repositoryId, tierFilter || undefined);
-        setEvidence(response.data);
+        setEvidence(response.data.data);
       } catch (err: any) {
         setError(err.message || 'Failed to load evidence');
       } finally {
@@ -43,7 +43,7 @@ export default function Evidence() {
       await evidenceApi.verifyEvidence(repositoryId, evidenceId);
       // Refresh evidence list
       const response = await artifactsApi.getEvidence(repositoryId);
-      setEvidence(response.data);
+      setEvidence(response.data.data);
     } catch (err: any) {
       alert(`Verification failed: ${err.message}`);
     }
@@ -64,7 +64,7 @@ export default function Evidence() {
       await evidenceApi.batchVerifyEvidence(repositoryId, pendingIds);
       // Refresh evidence list
       const response = await artifactsApi.getEvidence(repositoryId);
-      setEvidence(response.data);
+      setEvidence(response.data.data);
       alert(`Verified ${pendingIds.length} evidence artifacts`);
     } catch (err: any) {
       alert(`Batch verification failed: ${err.message}`);
