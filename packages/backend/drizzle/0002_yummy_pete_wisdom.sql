@@ -1,0 +1,1 @@
+ALTER TYPE "public"."scan_status" ADD VALUE 'queued' BEFORE 'in_progress';

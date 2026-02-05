@@ -140,7 +140,7 @@ export class RepositoriesService {
   async updateLastScan(
     id: string,
     scanId: string,
-    status: 'pending' | 'in_progress' | 'completed' | 'failed',
+    status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed',
   ) {
     await db
       .update(repositories)

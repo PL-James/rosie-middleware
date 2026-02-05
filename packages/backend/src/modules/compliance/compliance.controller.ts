@@ -5,8 +5,10 @@ import {
   Query,
   Header,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Response } from 'express';
 import { ComplianceReportService } from './compliance-report.service';
 import { RiskAssessmentService } from './risk-assessment.service';
@@ -14,6 +16,7 @@ import { PdfGeneratorService } from './pdf-generator.service';
 
 @ApiTags('compliance')
 @Controller('api/v1/repositories/:repositoryId/compliance')
+@UseInterceptors(CacheInterceptor)
 export class ComplianceController {
   constructor(
     private complianceReportService: ComplianceReportService,
@@ -22,6 +25,7 @@ export class ComplianceController {
   ) {}
 
   @Get('report')
+  @CacheTTL(600000) // Cache for 10 minutes
   @ApiOperation({ summary: 'Generate compliance report for repository' })
   @ApiQuery({
     name: 'type',
