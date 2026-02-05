@@ -5,12 +5,14 @@ A middleware platform for scanning, indexing, and exposing GxP artifacts from RO
 ## Overview
 
 ROSIE Middleware provides:
-- Automated scanning of GitHub repositories for GxP artifacts
-- Product catalog built from multiple repositories
-- REST API for accessing requirements, user stories, specs, and evidence
-- Traceability validation and visualization
-- JWS signature verification
-- Compliance reporting (21 CFR Part 11)
+- **JWT Authentication** - Secure API access with role-based access control (RBAC)
+- **Automated scanning** - GitHub repositories for GxP artifacts
+- **Product catalog** - Multi-repository product aggregation
+- **REST API** - Requirements, user stories, specs, and evidence
+- **Traceability validation** - ROSIE RFC-001 compliance checking
+- **JWS verification** - Evidence signature verification with configurable keystore
+- **Compliance reporting** - 21 CFR Part 11 compliant audit trails and PDF export
+- **Single-server deployment** - Backend serves both API and React frontend
 
 ## Architecture
 
@@ -49,24 +51,118 @@ npm run dev
 
 ### Environment Variables
 
+See `packages/backend/.env.example` for complete reference.
+
+**Required:**
+
 ```env
-# Database
+# Database (Required)
 DATABASE_URL=postgresql://user:pass@localhost:5432/rosie
 
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# GitHub
+# GitHub API (Required)
 GITHUB_TOKEN=ghp_your_personal_access_token
 
-# JWT
-JWT_SECRET=your-secret-key
+# JWT Authentication (Required for production)
+JWT_SECRET=your-secret-key-change-in-production
+AUTH_REQUIRED=false  # Set to 'true' in production
+```
+
+**Optional:**
+
+```env
+# Redis/Queue
+REDIS_URL=redis://localhost:6379
+
+# JWS Evidence Verification
+JWS_PUBLIC_KEYS='["-----BEGIN PUBLIC KEY-----\nMII..."]'
+# Or individual numbered keys:
+# JWS_PUBLIC_KEY_1="-----BEGIN PUBLIC KEY-----\n..."
+# JWS_PUBLIC_KEY_2="-----BEGIN PUBLIC KEY-----\n..."
+JWS_LOG_FAILURES=true
+# JWS_MAX_AGE_SECONDS=3600
 
 # Application
 NODE_ENV=development
 PORT=3000
 FRONTEND_URL=http://localhost:5173
+LOG_LEVEL=info
 ```
+
+## Authentication
+
+### JWT Authentication
+
+The platform uses JWT (JSON Web Tokens) for authentication with role-based access control.
+
+**Development mode** (default):
+- `AUTH_REQUIRED=false` - API is accessible without authentication
+- Default admin user: `admin@example.com` / `admin123`
+- In-memory user store (not persisted)
+
+**Production mode** (recommended):
+- Set `AUTH_REQUIRED=true` in environment
+- Set `JWT_SECRET` to a strong random value (32+ characters)
+- `NODE_ENV=production` prevents auth bypass
+- Replace in-memory user store with database authentication
+
+**Endpoints:**
+
+```bash
+# Register a new user
+POST /api/v1/auth/register
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "User Name"
+}
+
+# Login and get JWT token
+POST /api/v1/auth/login
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+# Returns: { "access_token": "eyJhbGc...", "user": {...} }
+
+# Get current user (requires authentication)
+GET /api/v1/auth/me
+Authorization: Bearer eyJhbGc...
+```
+
+**Roles:**
+- `admin` - Full access to all endpoints
+- `user` - Standard access
+- `viewer` - Read-only access
+
+### JWS Evidence Verification
+
+Evidence artifacts can be signed with JWS (JSON Web Signature) for cryptographic verification.
+
+**Configuration:**
+
+```bash
+# Option 1: JSON array of public keys
+JWS_PUBLIC_KEYS='["-----BEGIN PUBLIC KEY-----\nMIIBI...","-----BEGIN PUBLIC KEY-----\nMIIBI..."]'
+
+# Option 2: Individual numbered keys (easier for multi-line)
+JWS_PUBLIC_KEY_1="-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----"
+
+JWS_PUBLIC_KEY_2="-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----"
+```
+
+**Development:**
+- A development RSA-2048 key is included for testing
+- `allowUnsignedInDev: true` - Accepts unsigned JWS in development mode
+- ⚠️ **NOT for production use**
+
+**Production:**
+- Populate keystore with real public keys
+- Set `NODE_ENV=production` to disable unsigned JWS acceptance
+- Implement key rotation strategy
 
 ## Project Structure
 
@@ -124,9 +220,57 @@ npm run db:studio    # Open Drizzle Studio
 
 ## Deployment
 
-Deploys to Railway via GitHub integration:
-- **Preview:** Automatic deployment for PRs
-- **Production:** Automatic deployment on merge to main
+### Railway Deployment
+
+The platform deploys to Railway via GitHub integration with automatic migrations.
+
+**Deployment flow:**
+1. Push to GitHub (main branch or PR)
+2. Railway detects changes and builds Docker image
+3. **Migrations run automatically** before app starts
+4. Backend starts and serves both API and frontend
+5. Health check at `/api/v1/health`
+
+**Required Railway environment variables:**
+
+```env
+DATABASE_URL=postgresql://...  # Auto-created by Railway PostgreSQL addon
+GITHUB_TOKEN=ghp_...           # Your GitHub PAT
+JWT_SECRET=random-32-char-string
+AUTH_REQUIRED=true             # Enable auth in production
+NODE_ENV=production
+```
+
+**Optional Railway variables:**
+
+```env
+REDIS_URL=redis://...          # If using Redis addon
+JWS_PUBLIC_KEY_1="-----BEGIN PUBLIC KEY-----\n..."
+JWS_LOG_FAILURES=true
+PORT=3000                      # Railway auto-assigns if not set
+```
+
+**Railway setup:**
+1. Create new Railway project
+2. Add PostgreSQL database (creates `DATABASE_URL` automatically)
+3. Connect GitHub repository
+4. Add environment variables listed above
+5. Deploy!
+
+**Dockerfile:**
+- Multi-stage build (builder + production)
+- Alpine Linux base (node:20-alpine)
+- Pure JavaScript dependencies (no native compilation)
+- Frontend built and served by backend
+- Migrations run automatically on startup
+
+**Architecture:**
+- Backend runs on port specified by Railway's `PORT` variable
+- Frontend static files served from backend at `/`
+- API endpoints at `/api/v1/*`
+- Swagger docs at `/api/docs`
+
+See `RAILWAY_DEPLOYMENT.md` for detailed deployment guide.
 
 ## Database Migrations
 
