@@ -9,7 +9,7 @@
   "scripts": {
     "backend:dev": "npm run dev --workspace=backend",
     "backend:build": "npm run build --workspace=backend",
-    "backend:start": "npm run start:prod --workspace=backend",
+    "backend:start": "npm run db:migrate && npm run start:prod --workspace=backend",
     "frontend:dev": "npm run dev --workspace=frontend",
     "frontend:build": "npm run build --workspace=frontend",
     "db:generate": "npm run db:generate --workspace=backend",
