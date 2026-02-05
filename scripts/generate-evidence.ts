@@ -25,7 +25,7 @@ interface TestResult {
 
 interface TestFileResult {
   name: string;
-  testResults: Array<{
+  assertionResults: Array<{
     ancestorTitles: string[];
     title: string;
     status: 'passed' | 'failed' | 'skipped';
@@ -226,12 +226,12 @@ function findTestsForSpec(
       continue;
     }
 
-    // Skip if testResults doesn't exist or isn't an array
-    if (!fileResult.testResults || !Array.isArray(fileResult.testResults)) {
+    // Skip if assertionResults doesn't exist or isn't an array
+    if (!fileResult.assertionResults || !Array.isArray(fileResult.assertionResults)) {
       continue;
     }
 
-    for (const test of fileResult.testResults) {
+    for (const test of fileResult.assertionResults) {
       results.push({
         name: test.title,
         status: test.status,
