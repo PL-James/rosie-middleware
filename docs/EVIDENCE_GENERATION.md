@@ -1,41 +1,30 @@
 # ROSIE Evidence Generation Pipeline
 
-**Status:** ✅ Fully Operational (as of 2026-02-05)
-
 ## Overview
 
-The ROSIE Middleware now has a fully automated evidence generation pipeline that produces cryptographically signed evidence artifacts for GxP compliance validation. Every push to `main` triggers automated test execution and evidence generation.
+The ROSIE Middleware generates cryptographically signed evidence artifacts for GxP compliance validation. The pipeline runs on every push to `main` and on every pull request, producing both legacy JWS files and tiered evidence packages.
 
-## Pipeline Components
+## Dual-Mode Output
 
-### 1. Automated Testing
-- **Platform:** GitHub Actions with PostgreSQL 16 service container
-- **Test Runner:** Vitest 2.1.9
-- **Test Types:** Unit, Integration, End-to-End
-- **Coverage:** 136 tests across 16 test files
+The pipeline produces evidence in two formats for backward compatibility:
 
-### 2. Evidence Generation
-- **Script:** `scripts/generate-evidence.ts`
-- **Input:** Test results from vitest JSON reporter
-- **Output:** JWS-signed evidence artifacts (`.gxp/evidence/*.jws`)
-- **Signing Algorithm:** ES256 (ECDSA P-256)
-- **Key Format:** PKCS#8
+### Legacy JWS (Single-File)
 
-### 3. Evidence Verification
-- **Script:** `scripts/verify-evidence.ts`
-- **Validation:** JWS signature verification, spec coverage analysis
-- **Output:** Verification report with pass/fail status
+Individual `.jws` files in `.gxp/evidence/`, each containing a signed payload with test results for one specification. Format:
 
-## Evidence Artifact Structure
+```
+.gxp/evidence/EV-SPEC-001-001.jws
+.gxp/evidence/EV-SPEC-002-001.jws
+```
 
-Each evidence file (`.jws`) contains:
+Payload structure:
 
 ```json
 {
   "@context": "https://www.rosie-standard.org/evidence/v1",
-  "gxp_id": "EV-SPEC-XXX-YYY",
-  "spec_id": "SPEC-XXX-YYY",
-  "verification_tier": "IQ|OQ|PQ",
+  "gxp_id": "EV-SPEC-001-001",
+  "spec_id": "SPEC-001-001",
+  "verification_tier": "OQ",
   "test_results": {
     "tool": "vitest",
     "version": "2.1.9",
@@ -50,64 +39,287 @@ Each evidence file (`.jws`) contains:
 }
 ```
 
-Signed with JWS header:
-```json
-{
-  "alg": "ES256",
-  "typ": "JWT",
-  "kid": "rosie-middleware-2026-02-05"
+### Tiered Evidence Packages (Directory-Based)
+
+Self-contained directories in `.gxp/evidence/`, one per specification per tier, containing metadata, environment snapshot, test results, manifest, and signed manifest. Format:
+
+```
+.gxp/evidence/IQ-SPEC-INF-001-2026-02-05T14-30-00-000Z/
+.gxp/evidence/OQ-SPEC-001-001-2026-02-05T14-30-00-000Z/
+.gxp/evidence/PQ-SPEC-008-001-2026-02-05T14-30-00-000Z/
+```
+
+See `docs/EVIDENCE_PACKAGE_FORMAT.md` for the full directory structure and file schemas.
+
+## Evidence Generation Pipeline
+
+```
+Test Execution
+     |
+     v
+Parse Test Results (vitest JSON reporter output)
+     |
+     v
+Parse GxP Annotations (@gxp-tag, @trace, @test-type)
+     |
+     v
+Compute system_state_hash (SHA-256 of /src tree)
+     |
+     v
+Route results by tier (IQ / OQ / PQ)
+     |
+     v
+Create Evidence Packages (tier-specific directories)
+     |
+     v
+Generate Manifests (SHA-256 hash of all package files)
+     |
+     v
+Sign Manifests (ES256 JWS compact serialization)
+     |
+     v
+Verify Packages (validatePackage protocol)
+     |
+     v
+Commit + Upload Artifacts
+```
+
+### Step 1: Test Execution
+
+Tests run via Vitest with JSON reporter output:
+
+```bash
+npm run test:ci
+# Produces test-results.json in vitest JSON format
+```
+
+E2E tests run via Playwright:
+
+```bash
+cd packages/frontend && npx playwright test --reporter=json
+# Produces e2e-results.json + screenshots + traces
+```
+
+### Step 2: GxP Annotation Parsing
+
+The pipeline scans test files for annotation blocks:
+
+```typescript
+/**
+ * @gxp-tag SPEC-001-001
+ * @trace US-001-001
+ * @gxp-criticality HIGH
+ * @test-type OQ
+ */
+```
+
+Annotations parsed:
+
+| Annotation | Required | Description |
+|-----------|----------|-------------|
+| `@gxp-tag` | Yes | Links to SPEC-XXX-YYY specification |
+| `@trace` | Yes | Links to US-XXX-YYY user story |
+| `@test-type` | Yes | Declares tier: `IQ`, `OQ`, or `PQ` |
+| `@gxp-criticality` | Recommended | `HIGH`, `MEDIUM`, or `LOW` |
+| `@requirement` | Optional | Links to REQ-XXX |
+| `@description` | Optional | Free-text purpose |
+
+### Step 3: system_state_hash Computation
+
+A deterministic SHA-256 hash of the entire `/src` tree, ensuring evidence is bound to specific code.
+
+Algorithm (implemented in `scripts/lib/system-state-hash.ts`):
+
+1. Recursively enumerate all files under the source directory
+2. Skip `node_modules/` and hidden directories (starting with `.`)
+3. Sort file list by relative path (lexicographic, ascending)
+4. Initialize SHA-256 hash context
+5. For each file: hash the relative path (UTF-8), then hash the file content (binary)
+6. Finalize as 64-character lowercase hex string
+
+```typescript
+import { computeSrcTreeHash } from './scripts/lib/system-state-hash';
+
+const hash = computeSrcTreeHash('/path/to/src');
+// => "a1b2c3d4e5f6..." (64 hex characters)
+```
+
+Including the file path in the hash means renamed files produce a different hash even if content is unchanged.
+
+### Step 4: Tier Routing
+
+Test results are grouped by their `@test-type` annotation:
+
+| Tier | Source | Additional Artifacts |
+|------|--------|---------------------|
+| IQ | Backend infrastructure tests | dependency-tree.json, health-check.json |
+| OQ | Backend unit/integration tests | coverage-report.json |
+| PQ | Frontend E2E tests (Playwright) | screenshots/, traces/ |
+
+### Step 5: Package Creation
+
+```typescript
+import { createEvidencePackage } from './scripts/lib/evidence-package';
+
+const pkgDir = createEvidencePackage({
+  specId: 'SPEC-001-001',
+  tier: 'OQ',
+  outputDir: '.gxp/evidence',
+  testResults: parsedResults,
+  systemStateHash: hash,
+  gitCommit: 'ebc5cc48',
+  tracedUserStory: 'US-001-001',
+  coverageReport: coverageData,  // OQ-specific
+});
+```
+
+### Step 6: Manifest + Signing
+
+```typescript
+import { generateManifest, signManifest } from './scripts/lib/evidence-package';
+import { readFileSync, writeFileSync } from 'fs';
+
+const manifest = generateManifest(pkgDir);
+writeFileSync(`${pkgDir}/manifest.json`, JSON.stringify(manifest, null, 2));
+
+const privateKey = readFileSync('.rosie-keys/private-key.pem', 'utf-8');
+const jws = await signManifest(manifest, privateKey);
+writeFileSync(`${pkgDir}/manifest.jws`, jws);
+```
+
+### Step 7: Verification
+
+```typescript
+import { validatePackage } from './scripts/lib/evidence-package';
+
+const publicKey = readFileSync('.rosie-keys/public-key.pem', 'utf-8');
+const result = await validatePackage(pkgDir, publicKey);
+
+if (!result.valid) {
+  console.error('Evidence package verification failed:', result.errors);
+  process.exit(1);
 }
 ```
 
-## Current Coverage
+## GxP Tag Annotation Examples
 
-- **Total Specs:** 15
-- **Specs with Tests:** 58 (many specs have multiple sub-specifications)
-- **Evidence Files Generated:** 58
-- **Verification Success Rate:** 100% (58/58)
+### OQ Test (Unit/Integration)
 
-## GitHub Actions Workflow
+```typescript
+/**
+ * Repository Service -- CRUD operations and validation
+ *
+ * @gxp-tag SPEC-001-001
+ * @trace US-001-001
+ * @gxp-criticality HIGH
+ * @test-type OQ
+ * @description OQ -- repository registration and deletion
+ */
+describe('RepositoryService', () => {
+  it('should register a new repository', () => { ... });
+  it('should reject duplicate git URLs', () => { ... });
+});
+```
 
-**File:** `.github/workflows/test-and-evidence.yml`
+### IQ Test (Infrastructure)
 
-**Triggers:**
+```typescript
+/**
+ * Database Schema Verification
+ *
+ * @gxp-tag SPEC-INF-001
+ * @trace US-INF-001
+ * @gxp-criticality HIGH
+ * @test-type IQ
+ * @description IQ -- verify database schema and migrations
+ */
+describe('Database Schema', () => {
+  it('should have all required tables', () => { ... });
+  it('should enforce foreign key constraints', () => { ... });
+});
+```
+
+### PQ Test (E2E)
+
+```typescript
+/**
+ * PQ -- Evidence Verification E2E Tests
+ *
+ * @gxp-tag SPEC-008-003
+ * @trace US-008-001
+ * @gxp-criticality HIGH
+ * @test-type PQ
+ * @description PQ -- QA Team: evidence list and verification UI
+ */
+test.describe('Evidence Verification', () => {
+  test('should load the application successfully', async ({ page }) => {
+    await page.goto('/');
+    await page.screenshot({ path: 'test-results/screenshots/evidence-app-load.png' });
+  });
+});
+```
+
+## @test-type Annotation
+
+The `@test-type` annotation determines which tier the test results are routed to:
+
+| Value | Tier | Test Runner | Artifacts |
+|-------|------|-------------|-----------|
+| `IQ` | Installation Qualification | Vitest | dependency-tree, health-check |
+| `OQ` | Operational Qualification | Vitest | coverage-report |
+| `PQ` | Performance Qualification | Playwright | screenshots, traces |
+
+Every test file MUST have exactly one `@test-type` annotation. A file without this annotation will not have its results included in any evidence package.
+
+## CI/CD Integration
+
+Workflow: `.github/workflows/test-and-evidence.yml`
+
+### Triggers
+
 - Push to `main` branch
-- Pull requests to `main` branch
+- Pull requests targeting `main`
 
-**Steps:**
-1. Setup Node.js and PostgreSQL
-2. Install dependencies
-3. Run database migrations
-4. Execute all tests (unit + integration)
-5. Generate evidence artifacts
-6. Verify evidence integrity
-7. Upload artifacts (90-day retention)
-8. Commit evidence to `main` (on successful push only)
-9. Comment PR summary (on pull requests)
+### Pipeline Steps
 
-## Signing Keys
+1. **Setup** -- Node.js 20, PostgreSQL 16 service container, Playwright browsers
+2. **Migrate** -- Run Drizzle ORM migrations against test database
+3. **Test** -- `npm run test:ci` (Vitest with JSON reporter)
+4. **E2E** -- Start backend, run Playwright tests, capture screenshots/traces
+5. **Keys** -- Load signing keys from GitHub Secrets (or generate ephemeral keys)
+6. **Generate** -- `npm run generate-evidence` (creates JWS files + tiered packages)
+7. **Verify** -- `npm run verify-evidence` (validates all packages)
+8. **Upload** -- Upload evidence artifacts to GitHub (90-day retention)
+9. **Commit** -- On `main` push, commit evidence to repository
+10. **Comment** -- On PRs, post evidence summary as PR comment
 
-**Location:** `.rosie-keys/`
-- `private-key.pem` - ES256 private key (PKCS#8 format)
-- `public-key.pem` - ES256 public key
+### Required Secrets
 
-**CI/CD:**
-- Private key stored in GitHub Secrets: `EVIDENCE_PRIVATE_KEY`
-- Public key stored in GitHub Secrets: `EVIDENCE_PUBLIC_KEY`
-- Ephemeral keys generated if secrets not configured
+| Secret | Description |
+|--------|-------------|
+| `EVIDENCE_PRIVATE_KEY` | ES256 private key (PKCS#8 PEM) |
+| `EVIDENCE_PUBLIC_KEY` | ES256 public key (SPKI PEM) |
 
-**Local Development:**
+If secrets are not configured, ephemeral keys are generated per run.
+
+### Signing Keys
+
+Generate locally:
+
 ```bash
-# Generate new signing keys (if needed)
+mkdir -p .rosie-keys
 openssl ecparam -name prime256v1 -genkey -noout | \
   openssl pkcs8 -topk8 -nocrypt -out .rosie-keys/private-key.pem
 openssl ec -in .rosie-keys/private-key.pem -pubout \
   -out .rosie-keys/public-key.pem
 ```
 
+The `.rosie-keys/` directory is gitignored. For CI, store the key contents in GitHub Secrets.
+
 ## Running Locally
 
-### Generate Evidence
+### Generate evidence
+
 ```bash
 # Run tests with JSON reporter
 npm run test:ci
@@ -116,125 +328,34 @@ npm run test:ci
 npm run generate-evidence
 ```
 
-### Verify Evidence
+### Verify evidence
+
 ```bash
 npm run verify-evidence
 ```
 
-### Manual Test Execution
+### Full local cycle
+
 ```bash
-# Backend tests only
-npm test --workspace=backend
-
-# Integration tests (requires PostgreSQL)
-TEST_DATABASE_URL=postgresql://localhost:5432/rosie_test \
-  npm test --workspace=backend
+npm run test:ci && npm run generate-evidence && npm run verify-evidence
 ```
-
-## GxP Tag Requirements
-
-All tests that contribute to evidence must have GxP tags:
-
-```typescript
-/**
- * @gxp-tag SPEC-XXX-YYY
- * @gxp-criticality HIGH|MEDIUM|LOW
- * @test-type unit|integration|e2e
- * @requirement REQ-XXX (optional)
- * @description Brief test description
- */
-it('should validate requirement', () => {
-  // Test implementation
-});
-```
-
-## Verification Tiers
-
-- **IQ (Installation Qualification):** System setup and configuration
-- **OQ (Operational Qualification):** System functionality and features
-- **PQ (Performance Qualification):** System performance and scalability
 
 ## Troubleshooting
 
-### Evidence Generation Fails
+### No evidence packages created
 
-**Symptom:** No `.jws` files created
+1. Check that `test-results.json` exists after `npm run test:ci`
+2. Verify `@gxp-tag` annotations exist in test files: `grep -r "@gxp-tag" packages/backend/src --include="*.spec.ts"`
+3. Check signing keys exist: `ls -la .rosie-keys/`
 
-**Common Causes:**
-1. Test results file not found → Check `test-results.json` exists
-2. No GxP tags found → Verify `@gxp-tag` comments in test files
-3. Signing keys missing → Check `.rosie-keys/` directory
+### Verification fails
 
-**Solution:**
-```bash
-# Verify test results structure
-cat test-results.json | jq '.testResults[0] | keys'
+1. Re-generate evidence with current keys: `npm run generate-evidence`
+2. Check public key format: `openssl ec -pubin -in .rosie-keys/public-key.pem -text`
+3. Ensure files were not modified after signing
 
-# Check for GxP tags
-grep -r "@gxp-tag" packages/backend/src --include="*.spec.ts"
+### CI workflow failures
 
-# Verify signing keys
-ls -la .rosie-keys/
-```
-
-### Verification Fails
-
-**Symptom:** `npm run verify-evidence` reports failed signatures
-
-**Common Causes:**
-1. Evidence signed with different key → Re-generate with correct key
-2. Evidence file corrupted → Re-generate evidence
-3. Public key mismatch → Verify `.rosie-keys/public-key.pem`
-
-**Solution:**
-```bash
-# Re-generate evidence with current keys
-npm run generate-evidence
-
-# Verify public key format
-openssl ec -pubin -in .rosie-keys/public-key.pem -text
-```
-
-### CI Workflow Fails
-
-**Check:**
-1. GitHub Actions logs: `gh run list --workflow=test-and-evidence.yml`
-2. Database connection: Verify PostgreSQL service container started
-3. Test failures: Check test output in workflow logs
-4. Permissions: Verify workflow has `contents: write` permission
-
-## Compliance Artifacts
-
-All evidence artifacts are:
-- ✅ Cryptographically signed (non-repudiation)
-- ✅ Timestamped (temporal validation)
-- ✅ Linked to system state (git SHA)
-- ✅ Version controlled (committed to repository)
-- ✅ Archived (90-day retention in GitHub Artifacts)
-
-## Future Enhancements
-
-- [ ] Evidence archival to long-term storage (S3/R2)
-- [ ] PDF compliance report generation
-- [ ] Evidence dashboard (view all evidence in web UI)
-- [ ] Automated spec coverage tracking
-- [ ] Evidence chain-of-custody logging
-
-## References
-
-- ROSIE RFC-001: Evidence Artifact Specification
-- ROSIE Standard: https://www.rosie-standard.org/evidence/v1
-- JWS Specification: RFC 7515
-- ES256 Algorithm: RFC 7518 Section 3.4
-
-## Maintenance
-
-**Quarterly:**
-- Review evidence coverage (target: 100% of specs)
-- Rotate signing keys (recommended but not required)
-- Archive evidence artifacts to long-term storage
-
-**Per Release:**
-- Generate full evidence report
-- Verify all critical specs have evidence
-- Update compliance documentation
+1. Check GitHub Actions logs: `gh run list --workflow=test-and-evidence.yml`
+2. Verify PostgreSQL service container started
+3. Check workflow permissions: `contents: write` and `pull-requests: write` are required

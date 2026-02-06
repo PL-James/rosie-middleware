@@ -11,6 +11,7 @@ import { auditLog, repositories } from '@/db/schema';
  * Compliance Report Integration Tests
  *
  * @gxp-tag REQ-SEC-003
+ * @trace US-007-001
  * @gxp-criticality HIGH
  * @test-type integration
  *

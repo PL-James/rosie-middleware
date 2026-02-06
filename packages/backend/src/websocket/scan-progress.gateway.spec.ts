@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 
 /**
  * @gxp-tag SPEC-005-004-001
+ * @trace US-005-001
  * @gxp-criticality HIGH
  * @test-type unit
  * @requirement REQ-005

@@ -4,6 +4,7 @@ import type { ComplianceReport } from './compliance-report.service';
 
 /**
  * @gxp-tag SPEC-006-001-001
+ * @trace US-006-001
  * @gxp-criticality HIGH
  * @test-type unit
  * @requirement REQ-006

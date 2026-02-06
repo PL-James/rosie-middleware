@@ -8,6 +8,7 @@ import {
   jsonb,
   boolean,
   integer,
+  bigint,
   index,
   uniqueIndex,
   pgEnum,
@@ -306,6 +307,11 @@ export const evidence = pgTable(
     timestamp: timestamp('timestamp'), // Evidence creation timestamp
     rawContent: text('raw_content'), // Full JWS file content
     metadata: jsonb('metadata'),
+    evidenceFormat: text('evidence_format').default('jws-single'),
+    packageDirectory: text('package_directory'),
+    manifestHash: text('manifest_hash'),
+    totalFiles: integer('total_files'),
+    totalSizeBytes: bigint('total_size_bytes', { mode: 'number' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({

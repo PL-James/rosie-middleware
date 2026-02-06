@@ -8,6 +8,7 @@ import { scans, repositories } from '@/db/schema';
  * Scanner Service Integration Tests - Pagination
  *
  * @gxp-tag REQ-SCAN-004
+ * @trace US-006-001
  * @gxp-criticality HIGH
  * @test-type integration
  *

@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
  * Scanner Service Unit Tests - Pagination
  *
  * @gxp-tag REQ-SCAN-004
+ * @trace US-006-001
  * @gxp-criticality MEDIUM
  * @test-type unit
  *

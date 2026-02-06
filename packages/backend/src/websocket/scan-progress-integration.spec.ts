@@ -3,6 +3,7 @@ import { ScanProgressGateway } from './scan-progress.gateway';
 
 /**
  * @gxp-tag SPEC-005-004-012
+ * @trace US-005-001
  * @gxp-criticality HIGH
  * @test-type integration
  * @requirement REQ-005

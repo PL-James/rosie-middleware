@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
  * GitHub API Client Unit Tests
  *
  * @gxp-tag REQ-GH-001
+ * @trace US-002-001
  * @gxp-criticality HIGH
  * @test-type unit
  *
