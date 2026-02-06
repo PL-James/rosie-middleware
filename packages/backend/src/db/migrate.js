@@ -23,6 +23,21 @@ async function runMigrations() {
   console.log(`Migrations folder: ${migrationsFolder}`);
 
   try {
+    // Pre-migration: deduplicate system_contexts to unblock unique index
+    // migration (0005). Keeps the most recent row per repository_id.
+    // Safe to run repeatedly — no-op when no duplicates exist.
+    await migrationClient`
+      DELETE FROM "system_contexts"
+      WHERE "id" NOT IN (
+        SELECT DISTINCT ON ("repository_id") "id"
+        FROM "system_contexts"
+        ORDER BY "repository_id", "created_at" DESC
+      )
+    `.catch(() => {
+      // Table may not exist yet on fresh databases — that's fine
+      console.log('Pre-migration dedup skipped (table may not exist yet)');
+    });
+
     await migrate(db, { migrationsFolder });
     console.log('Migrations completed successfully');
   } catch (error) {
