@@ -81,9 +81,11 @@ function filterEnvVars(env: NodeJS.ProcessEnv): Record<string, string> {
     'RAILWAY_ENVIRONMENT',
   ];
 
+  const piiKeys = new Set(['USER', 'HOME']);
+
   for (const name of allowlist) {
     if (env[name]) {
-      safeVars[name] = env[name]!;
+      safeVars[name] = piiKeys.has(name) ? redactPii(env[name]!) : env[name]!;
     }
   }
 

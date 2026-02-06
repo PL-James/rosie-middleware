@@ -32,7 +32,10 @@ export async function deleteAllRepositories(request: APIRequestContext) {
   const repos = await response.json();
 
   for (const repo of repos) {
-    await request.delete(`${API_BASE}/api/v1/repositories/${repo.id}`);
+    const deleteResponse = await request.delete(`${API_BASE}/api/v1/repositories/${repo.id}`);
+    if (!deleteResponse.ok()) {
+      throw new Error(`Failed to delete repository ${repo.id}: ${deleteResponse.status()} ${deleteResponse.statusText()}`);
+    }
   }
 }
 

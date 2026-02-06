@@ -58,6 +58,9 @@ describe('IQ - Installation Qualification', () => {
   });
 
   describe('Signing Keys', () => {
+    const keysExist = existsSync(path.join(ROOT, '.rosie-keys/private-key.pem'))
+      && existsSync(path.join(ROOT, '.rosie-keys/public-key.pem'));
+
     it('should have .rosie-keys/private-key.pem', () => {
       expect(existsSync(path.join(ROOT, '.rosie-keys/private-key.pem'))).toBe(true);
     });
@@ -66,7 +69,7 @@ describe('IQ - Installation Qualification', () => {
       expect(existsSync(path.join(ROOT, '.rosie-keys/public-key.pem'))).toBe(true);
     });
 
-    it('should use ES256-compatible keys (PKCS#8 or SEC1 EC key format)', () => {
+    it.skipIf(!keysExist)('should use ES256-compatible keys (PKCS#8 or SEC1 EC key format)', () => {
       const privateKey = readFileSync(path.join(ROOT, '.rosie-keys/private-key.pem'), 'utf-8');
       // ES256 keys can be stored as PKCS#8 ("BEGIN PRIVATE KEY") or SEC1 ("BEGIN EC PRIVATE KEY")
       const isPKCS8 = privateKey.includes('BEGIN PRIVATE KEY');

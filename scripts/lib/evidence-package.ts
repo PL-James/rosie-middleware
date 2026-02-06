@@ -323,7 +323,7 @@ function collectAllFiles(rootDir: string, prefix: string = ''): string[] {
 }
 
 /**
- * Copy all files from srcDir to destDir (shallow — files only, not recursive).
+ * Copy all files from srcDir to destDir (recursive, includes subdirectories).
  */
 function copyDirectoryContents(srcDir: string, destDir: string): void {
   const entries = readdirSync(srcDir, { withFileTypes: true });
