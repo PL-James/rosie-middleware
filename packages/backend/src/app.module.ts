@@ -17,6 +17,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { QueueModule } from './queue/queue.module';
 import { AppCacheModule } from './cache/cache.module';
 import { WebSocketModule } from './websocket/websocket.module';
+import { SpaController } from './spa.controller';
 
 @Module({
   imports: [
@@ -51,5 +52,6 @@ import { WebSocketModule } from './websocket/websocket.module';
     ManufacturersModule,
     ProductsModule,
   ],
+  controllers: [SpaController],
 })
 export class AppModule {}
