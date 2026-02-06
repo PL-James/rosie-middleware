@@ -1,0 +1,66 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 21,
+  "test_cases": [
+    {
+      "name": "should emit complete scan lifecycle via WebSocket",
+      "status": "passed",
+      "duration": 8.661493000000064,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should emit failure event in error scenarios",
+      "status": "passed",
+      "duration": 1.2065519999999879,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should handle concurrent scans with isolated events",
+      "status": "passed",
+      "duration": 2.2657859999999346,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should include timestamps in all events",
+      "status": "passed",
+      "duration": 1.4376039999999648,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should handle rapid progress updates without data loss",
+      "status": "passed",
+      "duration": 5.550051999999937,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should support optional message field in progress events",
+      "status": "passed",
+      "duration": 0.7190279999999802,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    },
+    {
+      "name": "should maintain event order under concurrent operations",
+      "status": "passed",
+      "duration": 1.165475000000015,
+      "ancestorTitles": [
+        "WebSocket Integration - Real-time Progress"
+      ]
+    }
+  ]
+}

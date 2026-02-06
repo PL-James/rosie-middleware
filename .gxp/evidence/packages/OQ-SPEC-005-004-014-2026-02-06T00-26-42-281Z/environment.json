@@ -1,0 +1,20 @@
+{
+  "node_version": "v20.20.0",
+  "npm_version": "10.8.2",
+  "platform": "linux",
+  "arch": "x64",
+  "os_release": "6.11.0-1018-azure",
+  "hostname": "[redacted:5662e1c9]",
+  "username": "[redacted:527aa9f4]",
+  "cwd": "[redacted:bdd475b7]",
+  "env_vars": {
+    "PATH": "/home/runner/work/rosie-middleware/rosie-middleware/node_modules/.bin:/home/runner/work/rosie-middleware/node_modules/.bin:/home/runner/work/node_modules/.bin:/home/runner/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/opt/hostedtoolcache/node/20.20.0/x64/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/opt/hostedtoolcache/node/20.20.0/x64/bin:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "SHELL": "/bin/bash",
+    "LANG": "C.UTF-8",
+    "HOME": "[redacted:b1cbc5f3]",
+    "USER": "[redacted:527aa9f4]",
+    "CI": "true",
+    "GITHUB_ACTIONS": "true"
+  },
+  "timestamp": "2026-02-06T00:26:42.373Z"
+}
