@@ -268,10 +268,17 @@ export async function validatePackage(
   }
 
   // 3. Check each file in the signed manifest exists and has correct hash
+  const resolvedPkgDir = path.resolve(packageDir) + path.sep;
   const manifestPaths = new Set(manifest.files.map(f => f.path));
 
   for (const entry of manifest.files) {
-    const absPath = path.join(packageDir, entry.path);
+    const absPath = path.resolve(packageDir, entry.path);
+
+    // Guard against path traversal (e.g., ../../../etc/passwd)
+    if (!absPath.startsWith(resolvedPkgDir)) {
+      errors.push(`File path outside package: ${entry.path}`);
+      continue;
+    }
 
     if (!existsSync(absPath)) {
       errors.push(`File missing: ${entry.path}`);
