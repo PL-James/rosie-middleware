@@ -1,0 +1,90 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 23,
+  "test_cases": [
+    {
+      "name": "should decode base64-encoded file content",
+      "status": "passed",
+      "duration": 5.615793999999994,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should handle utf-8 encoded file content",
+      "status": "passed",
+      "duration": 1.281577000000027,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should handle utf8 (without hyphen) encoded file content",
+      "status": "passed",
+      "duration": 0.9486190000000079,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should fetch large files via Git Blob API when encoding is \"none\"",
+      "status": "passed",
+      "duration": 5.18643800000001,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should throw error for unsupported encoding types",
+      "status": "passed",
+      "duration": 3.430060000000026,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should throw error when path is a directory",
+      "status": "passed",
+      "duration": 1.408331999999973,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should throw error when response is an array",
+      "status": "passed",
+      "duration": 1.2644239999999627,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should preserve Unicode characters during decoding",
+      "status": "passed",
+      "duration": 0.7906460000000379,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should handle empty files",
+      "status": "passed",
+      "duration": 1.097846000000004,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    },
+    {
+      "name": "should handle Git Blob API errors for large files",
+      "status": "passed",
+      "duration": 2.064137999999957,
+      "ancestorTitles": [
+        "GitHubApiClient - File Content Encoding"
+      ]
+    }
+  ]
+}

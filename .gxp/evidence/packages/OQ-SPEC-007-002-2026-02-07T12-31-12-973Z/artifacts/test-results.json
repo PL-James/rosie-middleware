@@ -1,0 +1,66 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 7,
+  "test_cases": [
+    {
+      "name": "should filter requirements by risk rating",
+      "status": "passed",
+      "duration": 3.7001800000000173,
+      "ancestorTitles": [
+        "ArtifactsController - Query Filtering"
+      ]
+    },
+    {
+      "name": "should filter user stories by parent_id",
+      "status": "passed",
+      "duration": 0.46309800000000223,
+      "ancestorTitles": [
+        "ArtifactsController - Query Filtering"
+      ]
+    },
+    {
+      "name": "should filter specs by verification tier",
+      "status": "passed",
+      "duration": 0.46290899999999624,
+      "ancestorTitles": [
+        "ArtifactsController - Query Filtering"
+      ]
+    },
+    {
+      "name": "should filter specs by parent_id",
+      "status": "passed",
+      "duration": 0.5430870000000141,
+      "ancestorTitles": [
+        "ArtifactsController - Query Filtering"
+      ]
+    },
+    {
+      "name": "should paginate results correctly",
+      "status": "passed",
+      "duration": 0.799773000000016,
+      "ancestorTitles": [
+        "ArtifactsController - Pagination"
+      ]
+    },
+    {
+      "name": "should handle last page with fewer items",
+      "status": "passed",
+      "duration": 0.5886019999999803,
+      "ancestorTitles": [
+        "ArtifactsController - Pagination"
+      ]
+    },
+    {
+      "name": "should return 404 semantics for non-existent resources",
+      "status": "passed",
+      "duration": 0.3005770000000041,
+      "ancestorTitles": [
+        "ArtifactsController - Pagination"
+      ]
+    }
+  ]
+}

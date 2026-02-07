@@ -1,0 +1,66 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 8,
+  "test_cases": [
+    {
+      "name": "should filter tree for .gxp directory files",
+      "status": "passed",
+      "duration": 3.387342000000018,
+      "ancestorTitles": [
+        "Scanner - Discovery Phase File Filtering"
+      ]
+    },
+    {
+      "name": "should detect empty .gxp directory as non-compliant",
+      "status": "passed",
+      "duration": 0.5020509999999945,
+      "ancestorTitles": [
+        "Scanner - Discovery Phase File Filtering"
+      ]
+    },
+    {
+      "name": "should categorize artifacts by path pattern",
+      "status": "passed",
+      "duration": 1.2330160000000205,
+      "ancestorTitles": [
+        "Scanner - Discovery Phase File Filtering"
+      ]
+    },
+    {
+      "name": "should identify changed files by comparing SHA hashes",
+      "status": "passed",
+      "duration": 0.7712600000000123,
+      "ancestorTitles": [
+        "Scanner - Delta Detection"
+      ]
+    },
+    {
+      "name": "should detect deleted files",
+      "status": "passed",
+      "duration": 0.3532950000000028,
+      "ancestorTitles": [
+        "Scanner - Delta Detection"
+      ]
+    },
+    {
+      "name": "should track scan status transitions correctly",
+      "status": "passed",
+      "duration": 1.075132999999994,
+      "ancestorTitles": [
+        "Scanner - Atomic Transaction Semantics"
+      ]
+    },
+    {
+      "name": "should include all artifact counts in scan completion",
+      "status": "passed",
+      "duration": 0.3075399999999888,
+      "ancestorTitles": [
+        "Scanner - Atomic Transaction Semantics"
+      ]
+    }
+  ]
+}

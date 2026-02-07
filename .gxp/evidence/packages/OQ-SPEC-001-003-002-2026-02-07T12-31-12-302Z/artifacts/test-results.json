@@ -1,0 +1,91 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 9,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 12,
+  "test_cases": [
+    {
+      "name": "should identify files with changed SHAs",
+      "status": "passed",
+      "duration": 5.305378000000019,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Delta Detection - Changed Files"
+      ]
+    },
+    {
+      "name": "should skip files with unchanged SHAs",
+      "status": "passed",
+      "duration": 1.1073930000000018,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Delta Detection - Changed Files"
+      ]
+    },
+    {
+      "name": "should identify deleted files",
+      "status": "passed",
+      "duration": 1.4219069999999192,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Delta Detection - Deleted Files"
+      ]
+    },
+    {
+      "name": "should handle no deleted files",
+      "status": "passed",
+      "duration": 0.6129569999999376,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Delta Detection - Deleted Files"
+      ]
+    },
+    {
+      "name": "should calculate correct performance improvement percentage",
+      "status": "passed",
+      "duration": 0.47989000000006854,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Performance Metrics"
+      ]
+    },
+    {
+      "name": "should handle 100% changed files (first scan)",
+      "status": "passed",
+      "duration": 0.4080060000000003,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Performance Metrics"
+      ]
+    },
+    {
+      "name": "should handle 0% changed files (no changes)",
+      "status": "passed",
+      "duration": 0.6069760000000315,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Performance Metrics"
+      ]
+    },
+    {
+      "name": "should handle empty previous checksums (first scan)",
+      "status": "passed",
+      "duration": 1.2273669999999584,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Edge Cases"
+      ]
+    },
+    {
+      "name": "should handle empty current files",
+      "status": "passed",
+      "duration": 0.6873079999999163,
+      "ancestorTitles": [
+        "ScannerService - Incremental Scanning",
+        "Edge Cases"
+      ]
+    }
+  ]
+}

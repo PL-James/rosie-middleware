@@ -1,0 +1,10 @@
+{
+  "@context": "https://www.rosie-standard.org/evidence/v1",
+  "package_id": "PKG-OQ-SPEC-005-004-008-1770467470424",
+  "spec_id": "SPEC-005-004-008",
+  "tier": "OQ",
+  "traced_user_story": "US-005-001",
+  "system_state_hash": "26c41fb2c1a942f16bb12438b35cb6cd7ec4920f28ac25e180ae0562ace41063",
+  "git_commit": "cbec5ad62069b9594c435d84ef0b16bc5e375e6a",
+  "created_at": "2026-02-07T12:31:10.424Z"
+}

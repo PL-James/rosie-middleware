@@ -1,0 +1,127 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 13,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 22,
+  "test_cases": [
+    {
+      "name": "should generate API key with correct prefix",
+      "status": "passed",
+      "duration": 4.650213000000008,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Generation"
+      ]
+    },
+    {
+      "name": "should store API key hash, not the key itself",
+      "status": "passed",
+      "duration": 1.2395480000000134,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Generation"
+      ]
+    },
+    {
+      "name": "should support optional expiration date",
+      "status": "passed",
+      "duration": 1.0300209999999197,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Generation"
+      ]
+    },
+    {
+      "name": "should support custom scopes",
+      "status": "passed",
+      "duration": 0.9911890000000767,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Generation"
+      ]
+    },
+    {
+      "name": "should validate correct API key and return user info",
+      "status": "passed",
+      "duration": 2.385060000000067,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Validation"
+      ]
+    },
+    {
+      "name": "should reject revoked API key",
+      "status": "passed",
+      "duration": 0.7589780000000701,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Validation"
+      ]
+    },
+    {
+      "name": "should reject expired API key",
+      "status": "passed",
+      "duration": 0.5892420000000129,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Validation"
+      ]
+    },
+    {
+      "name": "should reject invalid/unknown API key",
+      "status": "passed",
+      "duration": 0.6331940000000031,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Validation"
+      ]
+    },
+    {
+      "name": "should update lastUsedAt timestamp on successful validation",
+      "status": "passed",
+      "duration": 0.7759489999999687,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Validation"
+      ]
+    },
+    {
+      "name": "should revoke API key by ID",
+      "status": "passed",
+      "duration": 1.0509590000000344,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Revocation"
+      ]
+    },
+    {
+      "name": "should set isRevoked=true and revokedAt timestamp",
+      "status": "passed",
+      "duration": 1.4211860000000343,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "API Key Revocation"
+      ]
+    },
+    {
+      "name": "should generate cryptographically random API keys",
+      "status": "passed",
+      "duration": 1.1885239999999158,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "Security"
+      ]
+    },
+    {
+      "name": "should use SHA-256 for key hashing",
+      "status": "passed",
+      "duration": 5.262962000000016,
+      "ancestorTitles": [
+        "ApiKeyService - API Key Management",
+        "Security"
+      ]
+    }
+  ]
+}

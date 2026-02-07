@@ -1,0 +1,50 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 14,
+  "test_cases": [
+    {
+      "name": "should return all repositories on findAll",
+      "status": "passed",
+      "duration": 8.637991,
+      "ancestorTitles": [
+        "RepositoriesController"
+      ]
+    },
+    {
+      "name": "should return a single repository by ID",
+      "status": "passed",
+      "duration": 2.3427650000000426,
+      "ancestorTitles": [
+        "RepositoriesController"
+      ]
+    },
+    {
+      "name": "should create a new repository",
+      "status": "passed",
+      "duration": 1.45721199999997,
+      "ancestorTitles": [
+        "RepositoriesController"
+      ]
+    },
+    {
+      "name": "should update a repository",
+      "status": "passed",
+      "duration": 1.0956610000000069,
+      "ancestorTitles": [
+        "RepositoriesController"
+      ]
+    },
+    {
+      "name": "should delete a repository",
+      "status": "passed",
+      "duration": 0.8585429999999974,
+      "ancestorTitles": [
+        "RepositoriesController"
+      ]
+    }
+  ]
+}
