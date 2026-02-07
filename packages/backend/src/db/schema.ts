@@ -413,6 +413,37 @@ export const complianceReports = pgTable(
   }),
 );
 
+// Tag Blocks (JSDoc @gxp-* annotations from source files)
+export const tagBlocks = pgTable(
+  'tag_blocks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    repositoryId: uuid('repository_id')
+      .notNull()
+      .references(() => repositories.id, { onDelete: 'cascade' }),
+    scanId: uuid('scan_id')
+      .notNull()
+      .references(() => scans.id, { onDelete: 'cascade' }),
+    filePath: text('file_path').notNull(),
+    gxpId: text('gxp_id').notNull(),
+    traces: jsonb('traces'), // Array of referenced GxP IDs
+    gxpType: text('gxp_type'), // @gxp-type or @test-type value
+    description: text('description'), // First line of JSDoc block
+    line: integer('line').notNull(),
+    contentSha: text('content_sha'), // SHA256 of tag block
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    repositoryIdIdx: index('tag_block_repository_id_idx').on(table.repositoryId),
+    gxpIdIdx: index('tag_block_gxp_id_idx').on(table.gxpId),
+    uniqueRepoFileGxp: uniqueIndex('tag_block_unique_repo_file_gxp').on(
+      table.repositoryId,
+      table.filePath,
+      table.gxpId,
+    ),
+  }),
+);
+
 // Relations
 export const repositoriesRelations = relations(repositories, ({ many }) => ({
   scans: many(scans),
@@ -423,6 +454,7 @@ export const repositoriesRelations = relations(repositories, ({ many }) => ({
   evidence: many(evidence),
   traceabilityLinks: many(traceabilityLinks),
   complianceReports: many(complianceReports),
+  tagBlocks: many(tagBlocks),
 }));
 
 export const scansRelations = relations(scans, ({ one, many }) => ({
@@ -435,6 +467,7 @@ export const scansRelations = relations(scans, ({ one, many }) => ({
   userStories: many(userStories),
   specs: many(specs),
   evidence: many(evidence),
+  tagBlocks: many(tagBlocks),
 }));
 
 export const fileChecksumsRelations = relations(fileChecksums, ({ one }) => ({
@@ -500,6 +533,17 @@ export const evidenceRelations = relations(evidence, ({ one }) => ({
   spec: one(specs, {
     fields: [evidence.specId],
     references: [specs.id],
+  }),
+}));
+
+export const tagBlocksRelations = relations(tagBlocks, ({ one }) => ({
+  repository: one(repositories, {
+    fields: [tagBlocks.repositoryId],
+    references: [repositories.id],
+  }),
+  scan: one(scans, {
+    fields: [tagBlocks.scanId],
+    references: [scans.id],
   }),
 }));
 
@@ -636,4 +680,5 @@ export const repositoriesRelations2 = relations(repositories, ({ many }) => ({
   evidence: many(evidence),
   traceabilityLinks: many(traceabilityLinks),
   productRepositories: many(productRepositories),
+  tagBlocks: many(tagBlocks),
 }));

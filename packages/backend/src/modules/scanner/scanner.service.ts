@@ -10,13 +10,25 @@ import {
   specs,
   evidence,
   fileChecksums,
+  tagBlocks,
 } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { GitHubApiClient } from '../github/github-api.client';
 import { ArtifactParserService } from '../artifacts/artifact-parser.service';
 import { RepositoriesService } from '../repositories/repositories.service';
 import { TraceabilityValidatorService } from '../traceability/traceability-validator.service';
+import { createHash } from 'crypto';
 import { createPaginatedResponse, PaginatedResponse } from '@/common/pagination.dto';
+
+export interface ParsedTagBlock {
+  filePath: string;
+  gxpId: string;
+  traces: string[];
+  gxpType: string | null;
+  description: string | null;
+  line: number;
+  contentSha: string;
+}
 
 export interface ScanProgress {
   phase:
@@ -214,6 +226,7 @@ export class ScannerService {
         userStories: [] as any[],
         specs: [] as any[],
         evidence: [] as any[],
+        tagBlocks: [] as ParsedTagBlock[],
       };
 
       for (const file of files) {
@@ -250,6 +263,40 @@ export class ScannerService {
       this.logger.log(
         `[${scanId}] Parsed: ${artifacts.requirements.length} requirements, ${artifacts.userStories.length} user stories, ${artifacts.specs.length} specs, ${artifacts.evidence.length} evidence`,
       );
+
+      // Phase 3.5: Parse source file tag blocks (@gxp-* JSDoc annotations)
+      this.logger.log(`[${scanId}] Phase 3.5: Scanning source files for @gxp-* tag blocks`);
+      if (onProgress) await onProgress(55, 'Scanning source file annotations');
+
+      const sourceExtensions = ['.ts', '.js', '.tsx', '.jsx'];
+      const excludeDirs = ['node_modules/', 'dist/', '.gxp/'];
+      const sourceFiles = tree.filter(
+        (node) =>
+          node.type === 'blob' &&
+          sourceExtensions.some((ext) => node.path.endsWith(ext)) &&
+          !excludeDirs.some((dir) => node.path.startsWith(dir) || node.path.includes(`/${dir}`)),
+      );
+
+      if (sourceFiles.length > 0) {
+        const sourceFilePaths = sourceFiles.map((f) => f.path);
+        const sourceContents = await this.githubClient.getFilesContent(
+          owner,
+          repo,
+          sourceFilePaths,
+          commitSha,
+        );
+
+        for (const file of sourceContents) {
+          const parsed = this.parseTagBlocks(file.content, file.path);
+          artifacts.tagBlocks.push(...parsed);
+        }
+
+        this.logger.log(
+          `[${scanId}] Found ${artifacts.tagBlocks.length} tag blocks in ${sourceContents.length} source files`,
+        );
+      } else {
+        this.logger.log(`[${scanId}] No source files found for tag block scanning`);
+      }
 
       // Phase 4: Validate (basic validation - traceability in Phase 2)
       this.logger.log(`[${scanId}] Phase 4: Validate`);
@@ -443,6 +490,39 @@ export class ScannerService {
           });
       }
 
+      // Phase 5.3: Insert tag blocks (UPSERT)
+      if (artifacts.tagBlocks.length > 0) {
+        await db
+          .insert(tagBlocks)
+          .values(
+            artifacts.tagBlocks.map((tb) => ({
+              repositoryId: scan.repositoryId,
+              scanId,
+              filePath: tb.filePath,
+              gxpId: tb.gxpId,
+              traces: tb.traces,
+              gxpType: tb.gxpType,
+              description: tb.description,
+              line: tb.line,
+              contentSha: tb.contentSha,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [tagBlocks.repositoryId, tagBlocks.filePath, tagBlocks.gxpId],
+            set: {
+              scanId,
+              traces: sql`excluded.traces`,
+              gxpType: sql`excluded.gxp_type`,
+              description: sql`excluded.description`,
+              line: sql`excluded.line`,
+              contentSha: sql`excluded.content_sha`,
+            },
+          });
+        this.logger.log(
+          `[${scanId}] Persisted ${artifacts.tagBlocks.length} tag blocks`,
+        );
+      }
+
       // Phase 5.4: Update File Checksums
       this.logger.log(`[${scanId}] Phase 5.4: Updating file checksums`);
       if (onProgress) await onProgress(80, 'Updating file checksums');
@@ -547,7 +627,8 @@ export class ScannerService {
             requirementRecords.length +
             userStoryRecords.length +
             specRecords.length +
-            artifacts.evidence.length,
+            artifacts.evidence.length +
+            artifacts.tagBlocks.length,
         })
         .where(eq(scans.id, scanId));
 
@@ -563,7 +644,7 @@ export class ScannerService {
       await this.invalidateRepositoryCaches(scan.repositoryId);
 
       this.logger.log(
-        `[${scanId}] Scan completed in ${durationMs}ms - ${requirementRecords.length + userStoryRecords.length + specRecords.length + artifacts.evidence.length} artifacts created`,
+        `[${scanId}] Scan completed in ${durationMs}ms - ${requirementRecords.length + userStoryRecords.length + specRecords.length + artifacts.evidence.length + artifacts.tagBlocks.length} artifacts created (incl. ${artifacts.tagBlocks.length} tag blocks)`,
       );
     } catch (error) {
       this.logger.error(`[${scanId}] Scan failed:`, error);
@@ -644,6 +725,76 @@ export class ScannerService {
   }
 
   /**
+   * Parse JSDoc @gxp-* tag blocks from source file content
+   */
+  private parseTagBlocks(content: string, filePath: string): ParsedTagBlock[] {
+    const blocks: ParsedTagBlock[] = [];
+    const lines = content.split('\n');
+
+    // Match JSDoc comment blocks containing @gxp-tag
+    const jsdocBlockRegex = /\/\*\*[\s\S]*?\*\//g;
+    let match: RegExpExecArray | null;
+
+    while ((match = jsdocBlockRegex.exec(content)) !== null) {
+      const block = match[0];
+
+      // Only process blocks with @gxp-tag
+      const gxpTagMatch = block.match(/@gxp-tag\s+\{?\s*([^\s}]+)\s*\}?/);
+      if (!gxpTagMatch) continue;
+
+      const gxpId = gxpTagMatch[1];
+
+      // Calculate line number (1-indexed)
+      const beforeBlock = content.substring(0, match.index);
+      const line = beforeBlock.split('\n').length;
+
+      // Extract @gxp-type or @test-type
+      const typeMatch = block.match(/@(?:gxp-type|test-type)\s+\{?\s*([^\s}]+)\s*\}?/);
+      const gxpType = typeMatch ? typeMatch[1] : null;
+
+      // Extract @requirement or @traces references
+      const traces: string[] = [];
+      const tracesRegex = /@(?:requirement|traces)\s+\{?\s*([^\s}]+)\s*\}?/g;
+      let traceMatch: RegExpExecArray | null;
+      while ((traceMatch = tracesRegex.exec(block)) !== null) {
+        traces.push(traceMatch[1]);
+      }
+
+      // Extract description: @description tag or first meaningful line after /**
+      let description: string | null = null;
+      const descMatch = block.match(/@description\s+(.+)/);
+      if (descMatch) {
+        description = descMatch[1].replace(/\*\/$/, '').trim();
+      } else {
+        // First line after /** that isn't a tag
+        const blockLines = block.split('\n');
+        for (const bLine of blockLines) {
+          const cleaned = bLine.replace(/^\s*\/?\*+\s?/, '').trim();
+          if (cleaned && !cleaned.startsWith('@') && cleaned !== '/') {
+            description = cleaned;
+            break;
+          }
+        }
+      }
+
+      // Compute SHA256 of the full JSDoc block
+      const contentSha = createHash('sha256').update(block).digest('hex');
+
+      blocks.push({
+        filePath,
+        gxpId,
+        traces,
+        gxpType,
+        description,
+        line,
+        contentSha,
+      });
+    }
+
+    return blocks;
+  }
+
+  /**
    * Invalidate all cached data for a repository
    * Called after scan completion to ensure fresh data
    */
@@ -656,6 +807,7 @@ export class ScannerService {
       `/api/v1/repositories/${repositoryId}/evidence`,
       `/api/v1/repositories/${repositoryId}/compliance/report`,
       `/api/v1/repositories/${repositoryId}/compliance/risk-assessment`,
+      `/api/v1/repositories/${repositoryId}/tag-blocks`,
     ];
 
     for (const key of cacheKeys) {
