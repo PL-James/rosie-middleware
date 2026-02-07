@@ -454,6 +454,7 @@ export const repositoriesRelations = relations(repositories, ({ many }) => ({
   evidence: many(evidence),
   traceabilityLinks: many(traceabilityLinks),
   complianceReports: many(complianceReports),
+  productRepositories: many(productRepositories),
   tagBlocks: many(tagBlocks),
 }));
 
@@ -670,15 +671,3 @@ export const productRepositoriesRelations = relations(
   }),
 );
 
-// Update repositories relations to include product links
-export const repositoriesRelations2 = relations(repositories, ({ many }) => ({
-  scans: many(scans),
-  systemContexts: many(systemContexts),
-  requirements: many(requirements),
-  userStories: many(userStories),
-  specs: many(specs),
-  evidence: many(evidence),
-  traceabilityLinks: many(traceabilityLinks),
-  productRepositories: many(productRepositories),
-  tagBlocks: many(tagBlocks),
-}));

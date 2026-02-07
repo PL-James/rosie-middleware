@@ -1,12 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { db, tagBlocks } from '@/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, asc, sql } from 'drizzle-orm';
 import { createPaginatedResponse, PaginatedResponse } from '@/common/pagination.dto';
 
 @Injectable()
 export class TagBlocksService {
-  private readonly logger = new Logger(TagBlocksService.name);
-
   async getTagBlocks(
     repositoryId: string,
     page: number = 1,
@@ -27,6 +25,7 @@ export class TagBlocksService {
       .select()
       .from(tagBlocks)
       .where(eq(tagBlocks.repositoryId, repositoryId))
+      .orderBy(asc(tagBlocks.filePath), asc(tagBlocks.gxpId))
       .limit(validatedLimit)
       .offset(offset);
 
