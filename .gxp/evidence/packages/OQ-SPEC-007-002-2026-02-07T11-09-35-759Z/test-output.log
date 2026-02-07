@@ -1,0 +1,17 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:35.837Z
+
+Tool: vitest v2.1.9
+Results: 7 passed, 0 failed, 0 skipped (7 total)
+Duration: 6ms
+
+--- Test Cases ---
+  [PASS] should filter requirements by risk rating (2.9493979999999738ms)
+  [PASS] should filter user stories by parent_id (0.6719919999999888ms)
+  [PASS] should filter specs by verification tier (0.4184979999999996ms)
+  [PASS] should filter specs by parent_id (0.37972500000000764ms)
+  [PASS] should paginate results correctly (0.7035389999999779ms)
+  [PASS] should handle last page with fewer items (0.501658999999961ms)
+  [PASS] should return 404 semantics for non-existent resources (0.26250299999998106ms)
+
+=== End of Test Output ===

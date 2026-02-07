@@ -1,0 +1,30 @@
+{
+  "package_id": "PKG-OQ-SPEC-005-004-019-1770462575389",
+  "spec_id": "SPEC-005-004-019",
+  "tier": "OQ",
+  "created_at": "2026-02-07T11:09:35.462Z",
+  "files": [
+    {
+      "path": "artifacts/test-results.json",
+      "sha256": "ac04590a9020febc5aaf126551caffd4dcf930465be17d3b2ac283e9376cf82d",
+      "size_bytes": 1752
+    },
+    {
+      "path": "environment.json",
+      "sha256": "83bda237b0a080fb7a729fa4b6bfdccc94cdeb79e9827308fa349b90c5057fd2",
+      "size_bytes": 736
+    },
+    {
+      "path": "metadata.json",
+      "sha256": "bb5da7a01a4a05c20f4f108fee18e857918c31cc40f58236561e617e95ffd993",
+      "size_bytes": 400
+    },
+    {
+      "path": "test-output.log",
+      "sha256": "7f94c873e5107c2d54ac9e738fdecf84afa0b055d74fb2135335a392af5646d9",
+      "size_bytes": 781
+    }
+  ],
+  "total_size_bytes": 3669,
+  "file_count": 4
+}

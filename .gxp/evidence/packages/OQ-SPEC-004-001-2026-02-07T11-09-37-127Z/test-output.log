@@ -1,0 +1,22 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:37.200Z
+
+Tool: vitest v2.1.9
+Results: 12 passed, 0 failed, 0 skipped (12 total)
+Duration: 15ms
+
+--- Test Cases ---
+  [PASS] should parse system_context.md with YAML frontmatter (6.707988999999998ms)
+  [PASS] should parse requirement with YAML frontmatter (1.0115789999999834ms)
+  [PASS] should handle malformed YAML gracefully (0.5580420000000004ms)
+  [PASS] should parse user story with As A / I Want / So That (0.9019130000000359ms)
+  [PASS] should parse spec with verification tier (0.5697270000000572ms)
+  [PASS] should parse valid JWS evidence with 3 parts (1.3216919999999845ms)
+  [PASS] should handle invalid JWS format gracefully (2.009498000000008ms)
+  [PASS] should detect requirement type from path (0.33329300000002604ms)
+  [PASS] should detect user_story type from path (0.45951000000002296ms)
+  [PASS] should detect spec type from path (0.2704029999999875ms)
+  [PASS] should detect evidence type from .jws files (0.25348399999995763ms)
+  [PASS] should return unknown for non-ROSIE files (0.2499640000000909ms)
+
+=== End of Test Output ===

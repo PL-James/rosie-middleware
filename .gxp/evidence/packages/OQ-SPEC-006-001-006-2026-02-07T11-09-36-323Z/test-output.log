@@ -1,0 +1,24 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:36.400Z
+
+Tool: vitest v2.1.9
+Results: 14 passed, 0 failed, 0 skipped (14 total)
+Duration: 295ms
+
+--- Test Cases ---
+  [PASS] should generate PDF as a Buffer (43.363133999999945ms)
+  [PASS] should generate valid PDF header (25.92006600000002ms)
+  [PASS] should generate deterministic PDF size (37.83664199999998ms)
+  [PASS] should include report title in PDF metadata (18.446477999999956ms)
+  [PASS] should generate PDF with multiple pages for complete report (19.456984999999918ms)
+  [PASS] should include PDF font definitions for text rendering (35.23732700000005ms)
+  [PASS] should include compressed content streams (21.699838999999884ms)
+  [PASS] should include report metadata in PDF info (19.890035000000125ms)
+  [PASS] should have proper PDF catalog structure (14.499960000000101ms)
+  [PASS] should include creation date in PDF (13.882777000000033ms)
+  [PASS] should handle minimal report data (6.4642019999998865ms)
+  [PASS] should handle long text content without overflow (8.749042999999801ms)
+  [PASS] should handle special characters in text (15.679246000000148ms)
+  [PASS] should generate PDF in reasonable time (13.781308000000081ms)
+
+=== End of Test Output ===

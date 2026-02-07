@@ -1,0 +1,20 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:36.004Z
+
+Tool: vitest v2.1.9
+Results: 10 passed, 0 failed, 0 skipped (10 total)
+Duration: 20ms
+
+--- Test Cases ---
+  [PASS] should decode base64-encoded file content (4.946800999999937ms)
+  [PASS] should handle utf-8 encoded file content (1.2515980000000582ms)
+  [PASS] should handle utf8 (without hyphen) encoded file content (0.8802689999999984ms)
+  [PASS] should fetch large files via Git Blob API when encoding is "none" (4.039441000000011ms)
+  [PASS] should throw error for unsupported encoding types (2.856657000000041ms)
+  [PASS] should throw error when path is a directory (1.4093090000000075ms)
+  [PASS] should throw error when response is an array (1.2772399999998925ms)
+  [PASS] should preserve Unicode characters during decoding (0.8543869999999743ms)
+  [PASS] should handle empty files (0.9650420000000395ms)
+  [PASS] should handle Git Blob API errors for large files (1.5648519999999735ms)
+
+=== End of Test Output ===

@@ -1,0 +1,14 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:35.684Z
+
+Tool: vitest v2.1.9
+Results: 4 passed, 0 failed, 0 skipped (4 total)
+Duration: 5ms
+
+--- Test Cases ---
+  [PASS] should parse HTTPS GitHub URLs correctly (3.079550999999981ms)
+  [PASS] should parse GitHub URLs with .git suffix (0.701676999999961ms)
+  [PASS] should return null for invalid URLs (0.562689999999975ms)
+  [PASS] should handle URLs with nested paths (0.49019799999996394ms)
+
+=== End of Test Output ===

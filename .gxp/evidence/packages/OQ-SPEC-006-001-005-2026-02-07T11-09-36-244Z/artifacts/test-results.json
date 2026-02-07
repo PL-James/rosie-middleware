@@ -1,0 +1,136 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 14,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 295,
+  "test_cases": [
+    {
+      "name": "should generate PDF as a Buffer",
+      "status": "passed",
+      "duration": 43.363133999999945,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Buffer Generation"
+      ]
+    },
+    {
+      "name": "should generate valid PDF header",
+      "status": "passed",
+      "duration": 25.92006600000002,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Buffer Generation"
+      ]
+    },
+    {
+      "name": "should generate deterministic PDF size",
+      "status": "passed",
+      "duration": 37.83664199999998,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Buffer Generation"
+      ]
+    },
+    {
+      "name": "should include report title in PDF metadata",
+      "status": "passed",
+      "duration": 18.446477999999956,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should generate PDF with multiple pages for complete report",
+      "status": "passed",
+      "duration": 19.456984999999918,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should include PDF font definitions for text rendering",
+      "status": "passed",
+      "duration": 35.23732700000005,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should include compressed content streams",
+      "status": "passed",
+      "duration": 21.699838999999884,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should include report metadata in PDF info",
+      "status": "passed",
+      "duration": 19.890035000000125,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should have proper PDF catalog structure",
+      "status": "passed",
+      "duration": 14.499960000000101,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should include creation date in PDF",
+      "status": "passed",
+      "duration": 13.882777000000033,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "PDF Content Validation"
+      ]
+    },
+    {
+      "name": "should handle minimal report data",
+      "status": "passed",
+      "duration": 6.4642019999998865,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "Edge Cases"
+      ]
+    },
+    {
+      "name": "should handle long text content without overflow",
+      "status": "passed",
+      "duration": 8.749042999999801,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "Edge Cases"
+      ]
+    },
+    {
+      "name": "should handle special characters in text",
+      "status": "passed",
+      "duration": 15.679246000000148,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "Edge Cases"
+      ]
+    },
+    {
+      "name": "should generate PDF in reasonable time",
+      "status": "passed",
+      "duration": 13.781308000000081,
+      "ancestorTitles": [
+        "PdfGeneratorService - Compliance Report PDF Generation",
+        "Performance"
+      ]
+    }
+  ]
+}

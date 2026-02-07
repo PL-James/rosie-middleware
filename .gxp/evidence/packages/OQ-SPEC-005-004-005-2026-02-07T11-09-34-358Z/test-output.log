@@ -1,0 +1,21 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:34.429Z
+
+Tool: vitest v2.1.9
+Results: 11 passed, 0 failed, 0 skipped (11 total)
+Duration: 47ms
+
+--- Test Cases ---
+  [PASS] should handle client connections (16.195942999999943ms)
+  [PASS] should handle client disconnections (1.9799310000000787ms)
+  [PASS] should emit scan progress with correct event name and payload (3.9590610000000197ms)
+  [PASS] should emit scan progress without optional message (1.5497060000000147ms)
+  [PASS] should emit progress updates at different stages (3.7497220000000198ms)
+  [PASS] should emit scan complete with result payload (2.2088059999999814ms)
+  [PASS] should include timestamp in ISO format (1.598320000000058ms)
+  [PASS] should emit scan failed with error message (1.8533019999999851ms)
+  [PASS] should handle different error types (4.523370999999997ms)
+  [PASS] should use scan-specific event channels (5.064771000000064ms)
+  [PASS] should not interfere between different scan events (4.148883999999953ms)
+
+=== End of Test Output ===
