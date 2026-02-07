@@ -1,0 +1,17 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:35.163Z
+
+Tool: vitest v2.1.9
+Results: 7 passed, 0 failed, 0 skipped (7 total)
+Duration: 28ms
+
+--- Test Cases ---
+  [PASS] should emit complete scan lifecycle via WebSocket (8.11914999999999ms)
+  [PASS] should emit failure event in error scenarios (1.306506000000013ms)
+  [PASS] should handle concurrent scans with isolated events (2.9686229999999796ms)
+  [PASS] should include timestamps in all events (1.4529919999999947ms)
+  [PASS] should handle rapid progress updates without data loss (11.956027000000063ms)
+  [PASS] should support optional message field in progress events (0.8976899999998977ms)
+  [PASS] should maintain event order under concurrent operations (1.4797139999999445ms)
+
+=== End of Test Output ===

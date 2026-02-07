@@ -1,0 +1,17 @@
+=== Evidence Package Test Output ===
+Generated: 2026-02-07T11:09:35.608Z
+
+Tool: vitest v2.1.9
+Results: 7 passed, 0 failed, 0 skipped (7 total)
+Duration: 7ms
+
+--- Test Cases ---
+  [PASS] should filter tree for .gxp directory files (3.034987000000001ms)
+  [PASS] should detect empty .gxp directory as non-compliant (0.5745979999999804ms)
+  [PASS] should categorize artifacts by path pattern (1.1022930000000315ms)
+  [PASS] should identify changed files by comparing SHA hashes (0.49699400000002925ms)
+  [PASS] should detect deleted files (0.40563299999996616ms)
+  [PASS] should track scan status transitions correctly (1.0893750000000182ms)
+  [PASS] should include all artifact counts in scan completion (0.2576700000000187ms)
+
+=== End of Test Output ===
