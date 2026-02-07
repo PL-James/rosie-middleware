@@ -11,6 +11,7 @@ source_files:
 test_files:
   - packages/backend/src/modules/scanner/scanner-pipeline.integration.spec.ts
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Performance Qualification (PQ)

@@ -14,6 +14,7 @@ acceptance_criteria:
   - Batch file requests to minimize API calls (10 files per batch)
   - Verify commit SHA matches expected value after fetching
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -28,6 +29,10 @@ GitHub integration is the foundation of artifact retrieval. Incorrect fetching c
 - **Rate limit exhaustion**: Blocking all scanning operations
 
 These errors directly impact validation accuracy and could lead to false compliance reports, making this a HIGH risk requirement.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: HIGH** — Scripted testing with system-generated logs required. Evidence MUST be captured as JWS-signed artifacts in `.gxp/evidence/`. Multi-party authorization (MPA) SHOULD be used for evidence signing.
 
 ## Regulatory Context
 

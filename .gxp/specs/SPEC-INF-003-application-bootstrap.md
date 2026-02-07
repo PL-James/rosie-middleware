@@ -12,6 +12,7 @@ source_files:
   - packages/backend/src/app.module.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Installation Qualification (IQ)

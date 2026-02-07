@@ -11,6 +11,7 @@ source_files:
   - packages/frontend/src/components/RepositoryCard.tsx
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Performance Qualification (PQ)

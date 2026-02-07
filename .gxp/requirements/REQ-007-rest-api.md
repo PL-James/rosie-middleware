@@ -14,6 +14,7 @@ acceptance_criteria:
   - Support full-text search across title and description fields
   - Return consistent JSON response format
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -28,6 +29,10 @@ REST API is the primary interface for programmatic access to compliance data. AP
 - **No search capability**: Unusable for large artifact sets
 
 However, API errors do not corrupt underlying data and are easily detectable through testing. Users can re-query with corrected parameters. This makes the API less critical than core validation logic, but still significant.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: MEDIUM** — Unscripted or ad-hoc testing acceptable. Evidence MAY be captured as a Record of Testing (ROT) markdown file in `.gxp/evidence/`. Single-agent validation is acceptable.
 
 ## Regulatory Context
 

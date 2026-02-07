@@ -13,6 +13,7 @@ acceptance_criteria:
   - Record error details for failed scans
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

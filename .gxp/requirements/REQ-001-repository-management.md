@@ -14,6 +14,7 @@ acceptance_criteria:
   - Prevent duplicate repository registration
   - Track repository status (active, archived, error)
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -29,6 +30,10 @@ Repository management is the entry point for all compliance validation workflows
 The risk is elevated above LOW because:
 - Incorrect repository deletion could remove compliance evidence
 - Database cascading deletes could impact audit trail integrity
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: MEDIUM** — Unscripted or ad-hoc testing acceptable. Evidence MAY be captured as a Record of Testing (ROT) markdown file in `.gxp/evidence/`. Single-agent validation is acceptable.
 
 ## Regulatory Context
 

@@ -13,6 +13,7 @@ acceptance_criteria:
   - Index on timestamp and resource_id for audit queries
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

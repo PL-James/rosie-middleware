@@ -13,6 +13,7 @@ acceptance_criteria:
   - System logs deletion to audit trail
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

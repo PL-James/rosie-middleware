@@ -14,6 +14,7 @@ acceptance_criteria:
   - Support manual scan triggering via REST API
   - Log scan progress to console and audit trail
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -28,6 +29,10 @@ Scan orchestration coordinates all compliance validation workflows. Orchestratio
 - **Missing metrics**: Cannot identify performance bottlenecks
 
 However, orchestration errors are typically detectable (scan fails visibly) and do not corrupt existing data. Users can re-trigger scans. This makes orchestration less critical than parsing or persistence, but still significant.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: MEDIUM** — Unscripted or ad-hoc testing acceptable. Evidence MAY be captured as a Record of Testing (ROT) markdown file in `.gxp/evidence/`. Single-agent validation is acceptable.
 
 ## Regulatory Context
 

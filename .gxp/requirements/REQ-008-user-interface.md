@@ -14,6 +14,7 @@ acceptance_criteria:
   - Display scan history and error logs
   - Responsive design for desktop and tablet
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -27,6 +28,10 @@ User interface presents compliance data but does not participate in validation l
 - **Visual bugs**: Cosmetic issues, no impact on validation
 
 UI errors do not corrupt data, break traceability chains, or produce false compliance reports. Users can access all functionality via REST API as backup. This makes the UI the lowest risk component.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: LOW** — Ad-hoc testing sufficient. A simple Record of Testing recording who tested, when, and pass/fail result MUST be maintained. Formal JWS evidence is OPTIONAL.
 
 ## Regulatory Context
 

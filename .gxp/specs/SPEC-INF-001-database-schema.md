@@ -11,6 +11,7 @@ source_files:
   - packages/backend/src/db/schema.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Installation Qualification (IQ)

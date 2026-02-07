@@ -13,6 +13,7 @@ acceptance_criteria:
   - Include commit SHA in audit log for traceability
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

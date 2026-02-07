@@ -14,6 +14,7 @@ acceptance_criteria:
   - Return structured list with type and path
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

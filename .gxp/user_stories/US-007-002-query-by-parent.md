@@ -13,6 +13,7 @@ acceptance_criteria:
   - Support pagination for large result sets
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

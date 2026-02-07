@@ -14,6 +14,7 @@ acceptance_criteria:
   - Report missing required directories
   - Count artifacts by type for scan summary
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -28,6 +29,10 @@ Artifact discovery is the first phase of the scanning pipeline. Discovery errors
 - **Incorrect directory detection**: Entire scan fails or produces empty results
 
 These errors directly impact the completeness and accuracy of compliance validation, warranting HIGH risk classification.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: HIGH** — Scripted testing with system-generated logs required. Evidence MUST be captured as JWS-signed artifacts in `.gxp/evidence/`. Multi-party authorization (MPA) SHOULD be used for evidence signing.
 
 ## Regulatory Context
 

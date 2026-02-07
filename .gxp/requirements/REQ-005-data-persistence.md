@@ -14,6 +14,7 @@ acceptance_criteria:
   - Prevent duplicate artifact insertion
   - Index traceability fields for query performance
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -29,6 +30,10 @@ Data persistence is the final step in the scanning pipeline. Persistence errors 
 - **Slow queries**: Unusable system for large repositories
 
 Database integrity directly impacts all downstream compliance reporting and validation workflows.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: HIGH** — Scripted testing with system-generated logs required. Evidence MUST be captured as JWS-signed artifacts in `.gxp/evidence/`. Multi-party authorization (MPA) SHOULD be used for evidence signing.
 
 ## Regulatory Context
 

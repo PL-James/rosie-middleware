@@ -11,6 +11,7 @@ source_files:
   - packages/backend/src/modules/github/github.module.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Operational Qualification (OQ)

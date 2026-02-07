@@ -13,6 +13,7 @@ acceptance_criteria:
   - Return { data, content } where data is parsed YAML object
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

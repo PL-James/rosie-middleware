@@ -13,6 +13,7 @@ acceptance_criteria:
   - Update repository.last_scanned_at timestamp
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details
