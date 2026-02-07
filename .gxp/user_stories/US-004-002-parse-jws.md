@@ -13,6 +13,7 @@ acceptance_criteria:
   - Handle invalid JWS format gracefully
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

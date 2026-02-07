@@ -13,6 +13,7 @@ acceptance_criteria:
   - Support GitHub PAT and GitHub App credentials (future)
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

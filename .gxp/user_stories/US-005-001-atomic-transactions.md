@@ -13,6 +13,7 @@ acceptance_criteria:
   - Support retry on transient database errors
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

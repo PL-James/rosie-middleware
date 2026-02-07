@@ -13,6 +13,7 @@ acceptance_criteria:
   - Include error message in artifact record
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

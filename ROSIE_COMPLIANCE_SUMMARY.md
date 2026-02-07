@@ -1,7 +1,7 @@
 # ROSIE RFC-001 Compliance Implementation Summary
 
 **Project:** rosie-middleware
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Date:** 2026-02-03
 **Status:** ROSIE RFC-001 Compliant (DRAFT)
 
@@ -12,6 +12,29 @@
 The rosie-middleware project has been successfully made ROSIE RFC-001 compliant by creating a complete `.gxp/` directory structure with 44 GxP artifacts. This resolves the ironic situation where a compliance validation system was not itself compliant.
 
 **Key Achievement:** rosie-middleware can now **scan itself** and validate its own compliance, demonstrating dogfooding and providing a reference implementation for other projects.
+
+---
+
+## FDA CSA 2026 Alignment (v0.2.0)
+
+As of version 0.2.0, the rosie-middleware `.gxp/` artifacts have been updated for FDA Computer Software Assurance (CSA) alignment:
+
+| CSA Feature | Implementation Status |
+|------------|----------------------|
+| `assurance_status` field | ✅ Added to all artifacts (alias for `validation_status`) |
+| Risk-proportionate evidence notes | ✅ Added to all 8 requirements |
+| Vendor assessments directory | ✅ Created with PostgreSQL assessment template |
+| ROT evidence support | 📋 Documented (pending implementation) |
+| Release Manifest support | 📋 Documented (pending implementation) |
+| Automated evidence pipeline | 📋 Documented in CI/CD integration guide |
+
+### Evidence Requirements by Risk Level
+
+| Risk Level | Requirements | Evidence Type | Status |
+|------------|-------------|---------------|--------|
+| HIGH | REQ-002, REQ-003, REQ-004, REQ-005 | JWS-signed evidence | Pending test implementation |
+| MEDIUM | REQ-001, REQ-006, REQ-007 | Record of Testing (ROT) | Pending test implementation |
+| LOW | REQ-008 | Ad-hoc ROT | Pending test implementation |
 
 ---
 

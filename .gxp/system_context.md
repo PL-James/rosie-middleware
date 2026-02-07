@@ -1,9 +1,10 @@
 ---
 id: 3c4e7f9a-1b2d-4a5c-8e9f-0a1b2c3d4e5f
 project_name: "ROSIE Middleware Platform"
-version: "0.1.0"
+version: "0.2.0"
 gxp_risk_rating: HIGH
 validation_status: DRAFT
+assurance_status: DRAFT
 intended_use: |
   Middleware platform for scanning, indexing, and exposing GxP artifacts from
   ROSIE-compliant GitHub repositories. Provides centralized compliance validation
@@ -13,6 +14,9 @@ regulatory_context: |
   maintain proper GxP documentation, traceability chains, and cryptographic evidence.
   Ensures regulated pharmaceutical software systems maintain complete audit trails
   and verifiable documentation chains from requirements through implementation.
+  Aligned with FDA Computer Software Assurance (CSA) guidance (February 2026),
+  supporting risk-proportionate evidence (JWS for HIGH risk, ROT for non-HIGH),
+  vendor assurance leverage, and Release Manifest e-signatures.
 system_owner: "PharmaLedger Association"
 technical_contact: "compliance@pharmaledger.org"
 deployment_environment: "Railway (PostgreSQL 18, NestJS 11, React 18)"
@@ -183,6 +187,7 @@ The system maintains 9 core tables:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 0.1.0 | 2026-02-03 | James Gannon | Initial draft - ROSIE RFC-001 compliance artifacts |
+| 0.2.0 | 2026-02-07 | James Gannon | FDA CSA 2026 alignment — assurance_status, risk-proportionate evidence, vendor assessments |
 
 ## References
 

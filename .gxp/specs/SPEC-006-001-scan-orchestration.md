@@ -10,6 +10,7 @@ source_files:
   - packages/backend/src/modules/scanner/scanner.service.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Performance Qualification (PQ)

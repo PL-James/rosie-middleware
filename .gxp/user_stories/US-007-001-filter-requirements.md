@@ -13,6 +13,7 @@ acceptance_criteria:
   - Support combining with other filters
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

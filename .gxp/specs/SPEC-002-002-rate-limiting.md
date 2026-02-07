@@ -11,6 +11,7 @@ source_files:
   - packages/backend/src/modules/github/github-api.client.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Performance Qualification (PQ)

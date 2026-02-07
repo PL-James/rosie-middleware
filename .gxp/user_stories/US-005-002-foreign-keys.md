@@ -13,6 +13,7 @@ acceptance_criteria:
   - Reject inserts with invalid parent_id
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

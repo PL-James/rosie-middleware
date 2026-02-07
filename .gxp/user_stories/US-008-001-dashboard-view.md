@@ -13,6 +13,7 @@ acceptance_criteria:
   - Support search/filter by repository name
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

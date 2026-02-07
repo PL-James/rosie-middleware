@@ -11,6 +11,7 @@ source_files:
   - packages/frontend/src/api/repositories.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Operational Qualification (OQ)

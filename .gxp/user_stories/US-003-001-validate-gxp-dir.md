@@ -13,6 +13,7 @@ acceptance_criteria:
   - Return scan error if .gxp/ directory not found
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

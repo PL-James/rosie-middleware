@@ -10,6 +10,7 @@ source_files:
   - packages/backend/src/modules/repositories/repositories.controller.ts
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Operational Qualification (OQ)

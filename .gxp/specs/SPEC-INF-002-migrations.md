@@ -12,6 +12,7 @@ source_files:
   - packages/backend/drizzle/0000_initial_schema.sql
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Installation Qualification (IQ)

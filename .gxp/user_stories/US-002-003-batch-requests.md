@@ -13,6 +13,7 @@ acceptance_criteria:
   - Reduce total API calls from N (files) to N/10 (batches)
 status: IMPLEMENTED
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Implementation Details

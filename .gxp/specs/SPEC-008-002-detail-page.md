@@ -10,6 +10,7 @@ source_files:
   - packages/frontend/src/pages/RepositoryDetail.tsx
 test_files: []
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Performance Qualification (PQ)

@@ -14,6 +14,7 @@ acceptance_criteria:
   - Handle malformed YAML gracefully (log error, continue scan)
   - Support both snake_case and camelCase field names
 validation_status: DRAFT
+assurance_status: DRAFT
 ---
 
 ## Rationale
@@ -28,6 +29,10 @@ Parsing errors directly corrupt the compliance database:
 - **Malformed JWS parsing**: Cannot verify cryptographic evidence, compliance status unknown
 
 These errors cascade through traceability validation and compliance reporting, making parsing a HIGH risk operation.
+
+## Evidence Requirements (FDA CSA 2026)
+
+**Risk Level: HIGH** — Scripted testing with system-generated logs required. Evidence MUST be captured as JWS-signed artifacts in `.gxp/evidence/`. Multi-party authorization (MPA) SHOULD be used for evidence signing.
 
 ## Regulatory Context
 
