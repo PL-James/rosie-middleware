@@ -1,0 +1,18 @@
+{
+  "node_version": "v22.22.0",
+  "npm_version": "10.9.4",
+  "platform": "linux",
+  "arch": "x64",
+  "os_release": "6.12.63+deb13-amd64",
+  "hostname": "[redacted:e34eabaf]",
+  "username": "[redacted:c857d09d]",
+  "cwd": "[redacted:3610da80]",
+  "env_vars": {
+    "PATH": "/home/claude/rosie-middleware/node_modules/.bin:/home/claude/rosie-middleware/node_modules/.bin:/home/claude/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/usr/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/bin:/usr/bin:/bin:/usr/bn/games",
+    "SHELL": "/usr/bin/zsh",
+    "LANG": "en_IE.UTF-8",
+    "HOME": "[redacted:042486f3]",
+    "USER": "[redacted:c857d09d]"
+  },
+  "timestamp": "2026-02-07T11:09:36.162Z"
+}

@@ -1,0 +1,42 @@
+{
+  "tool": "vitest",
+  "version": "2.1.9",
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 5,
+  "test_cases": [
+    {
+      "name": "should parse HTTPS GitHub URLs correctly",
+      "status": "passed",
+      "duration": 3.079550999999981,
+      "ancestorTitles": [
+        "RepositoriesService - URL Parsing"
+      ]
+    },
+    {
+      "name": "should parse GitHub URLs with .git suffix",
+      "status": "passed",
+      "duration": 0.701676999999961,
+      "ancestorTitles": [
+        "RepositoriesService - URL Parsing"
+      ]
+    },
+    {
+      "name": "should return null for invalid URLs",
+      "status": "passed",
+      "duration": 0.562689999999975,
+      "ancestorTitles": [
+        "RepositoriesService - URL Parsing"
+      ]
+    },
+    {
+      "name": "should handle URLs with nested paths",
+      "status": "passed",
+      "duration": 0.49019799999996394,
+      "ancestorTitles": [
+        "RepositoriesService - URL Parsing"
+      ]
+    }
+  ]
+}

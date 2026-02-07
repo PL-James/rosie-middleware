@@ -5,12 +5,14 @@ import { ConfigService } from '@nestjs/config';
 /**
  * GitHub API Client Unit Tests
  *
- * @gxp-tag REQ-GH-001
+ * @gxp-tag SPEC-002-001
+ * @gxp-tag SPEC-002-002
  * @trace US-002-001
  * @gxp-criticality HIGH
- * @test-type unit
+ * @test-type OQ
  *
- * Validates file content encoding validation and large file handling.
+ * Validates file content encoding validation, large file handling,
+ * and batch rate limiting behavior.
  */
 
 describe('GitHubApiClient - File Content Encoding', () => {
